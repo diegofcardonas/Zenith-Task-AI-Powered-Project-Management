@@ -1,6 +1,7 @@
 import React from 'react';
 import { User } from '../../types';
 import AvatarWithStatus from '../AvatarWithStatus';
+import { useTranslation } from '../../i18n';
 
 interface UserListModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface UserListModalProps {
 }
 
 const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, onSelectUser }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -24,8 +26,8 @@ const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, o
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-text-primary">Todos los Usuarios ({users.length})</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
+          <h2 className="text-2xl font-bold text-text-primary">{t('modals.allUsers', { count: users.length })}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -47,7 +49,7 @@ const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, o
                 </div>
                 <div className="text-right">
                     <p className="text-sm text-text-secondary">{user.email}</p>
-                    <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{user.role}</span>
+                    <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{t(`common.${user.role.toLowerCase()}`)}</span>
                 </div>
               </button>
             ))}
@@ -56,7 +58,7 @@ const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, o
         
         <footer className="p-4 border-t border-border flex justify-end">
             <button onClick={onClose} className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">
-                Cerrar
+                {t('common.close')}
             </button>
         </footer>
       </div>

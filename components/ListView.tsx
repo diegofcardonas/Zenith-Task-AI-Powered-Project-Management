@@ -1,51 +1,43 @@
 import React, { useState } from 'react';
 import { Task, User, Role, Priority, Status, List } from '../types';
 import TaskRow from './TaskRow';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
 
-interface ListViewProps {
-  tasks: Task[];
-  users: User[];
-  onSelectTask: (task: Task) => void;
-  onUpdateTask: (task: Task) => void;
-  onDeleteTask: (taskId: string) => void;
-  currentUser: User;
-  allTasks: Task[];
-  allLists: List[];
-  onOpenBlockingTasks: (task: Task) => void;
-  logActivity: (taskId: string, text: string, user: User) => void;
-  onTasksReorder: (reorderedTasks: Task[]) => void;
-  onBulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => void;
-}
-
-const BulkActionBar: React.FC<{
+interface BulkActionBarProps {
     selectedCount: number;
     onClear: () => void;
     onUpdate: (updates: Partial<Task>) => void;
     users: User[];
-}> = ({ selectedCount, onClear, onUpdate, users }) => {
+}
+
+const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, onUpdate, users }) => {
+    const { t } = useTranslation();
+    const selectionText = selectedCount > 1 ? t('listView.selected_plural', { count: selectedCount }) : t('listView.selected', { count: selectedCount });
+    
     return (
         <div className="flex items-center justify-between p-2 bg-secondary border-b border-border animate-fadeIn">
-            <span className="font-semibold text-sm">{selectedCount} tarea{selectedCount > 1 ? 's' : ''} seleccionada{selectedCount > 1 ? 's' : ''}</span>
+            <span className="font-semibold text-sm">{selectionText}</span>
             <div className="flex items-center gap-2">
                  <select 
                     onChange={(e) => onUpdate({ status: e.target.value as Status })}
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">Cambiar Estado</option>
-                    {Object.values(Status).map(s => <option key={s} value={s}>{s}</option>)}
+                    <option value="">{t('listView.changeStatus')}</option>
+                    {Object.values(Status).map(s => <option key={s} value={s}>{t(`common.${s.replace(/\s+/g, '').toLowerCase()}`)}</option>)}
                 </select>
                  <select 
                     onChange={(e) => onUpdate({ priority: e.target.value as Priority })}
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">Cambiar Prioridad</option>
-                    {Object.values(Priority).map(p => <option key={p} value={p}>{p}</option>)}
+                    <option value="">{t('listView.changePriority')}</option>
+                    {Object.values(Priority).map(p => <option key={p} value={p}>{t(`common.${p.toLowerCase()}`)}</option>)}
                 </select>
                 <select 
                     onChange={(e) => onUpdate({ assigneeId: e.target.value || null })}
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">Cambiar Asignado</option>
+                    <option value="">{t('listView.changeAssignee')}</option>
                     {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
                 <button onClick={onClear} className="p-1 text-text-secondary hover:text-white">
@@ -58,7 +50,12 @@ const BulkActionBar: React.FC<{
     );
 };
 
-const ListView: React.FC<ListViewProps> = ({ tasks, users, onSelectTask, onUpdateTask, onDeleteTask, currentUser, allTasks, allLists, onOpenBlockingTasks, logActivity, onTasksReorder, onBulkUpdateTasks }) => {
+const ListView: React.FC = () => {
+  const { state, actions } = useAppContext();
+  const { filteredTasks: tasks, users, currentUser } = state;
+  const { handleBulkUpdateTasks, handleTasksReorder: onTasksReorder } = actions;
+  const { t } = useTranslation();
+  
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const dragItem = React.useRef<string | null>(null);
   const dragOverItem = React.useRef<string | null>(null);
@@ -66,12 +63,12 @@ const ListView: React.FC<ListViewProps> = ({ tasks, users, onSelectTask, onUpdat
   if (tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-full bg-surface rounded-lg">
-        <p className="text-text-secondary italic">No hay tareas en esta lista. ¡Crea una para empezar!</p>
+        <p className="text-text-secondary italic">{t('listView.noTasks')}</p>
       </div>
     );
   }
 
-  const isDraggable = currentUser.role !== Role.Guest;
+  const isDraggable = currentUser!.role !== Role.Guest;
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string) => {
     dragItem.current = taskId;
@@ -117,7 +114,7 @@ const ListView: React.FC<ListViewProps> = ({ tasks, users, onSelectTask, onUpdat
   };
 
   const handleBulkUpdate = (updates: Partial<Task>) => {
-      onBulkUpdateTasks(Array.from(selectedTaskIds), updates);
+      handleBulkUpdateTasks(Array.from(selectedTaskIds), updates);
       setSelectedTaskIds(new Set());
   };
 
@@ -141,12 +138,12 @@ const ListView: React.FC<ListViewProps> = ({ tasks, users, onSelectTask, onUpdat
                         checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
                     />
                 </div>
-                <div className="col-span-6 sm:col-span-3 md:col-span-2">Tarea</div>
-                <div className="col-span-2 hidden sm:block">Asignado</div>
-                <div className="col-span-3 sm:col-span-2">Estado</div>
-                <div className="col-span-2 hidden sm:block md:col-span-1">Fecha Venc.</div>
-                <div className="col-span-2 hidden md:block">Prioridad</div>
-                <div className="col-span-2 text-right">Acciones</div>
+                <div className="col-span-6 sm:col-span-3 md:col-span-2">{t('listView.task')}</div>
+                <div className="col-span-2 hidden sm:block">{t('listView.assignee')}</div>
+                <div className="col-span-3 sm:col-span-2">{t('listView.status')}</div>
+                <div className="col-span-2 hidden sm:block md:col-span-1">{t('listView.dueDate')}</div>
+                <div className="col-span-2 hidden md:block">{t('listView.priority')}</div>
+                <div className="col-span-2 text-right">{t('listView.actions')}</div>
             </div>
         </div>
         <div className="overflow-y-auto">
@@ -154,15 +151,6 @@ const ListView: React.FC<ListViewProps> = ({ tasks, users, onSelectTask, onUpdat
                 <TaskRow
                     key={task.id}
                     task={task}
-                    users={users}
-                    onSelectTask={onSelectTask}
-                    onUpdateTask={onUpdateTask}
-                    onDeleteTask={onDeleteTask}
-                    currentUser={currentUser}
-                    allTasks={allTasks}
-                    allLists={allLists}
-                    onOpenBlockingTasks={onOpenBlockingTasks}
-                    logActivity={logActivity}
                     isSelected={selectedTaskIds.has(task.id)}
                     onToggleSelection={handleToggleSelection}
                     isDraggable={isDraggable}

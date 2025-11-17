@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Task, Priority, User, Role } from '../types';
+import { useTranslation } from '../i18n';
 
 const PRIORITY_COLORS: { [key in Priority]: string } = {
     [Priority.High]: 'bg-priority-high',
@@ -13,12 +14,13 @@ const DayTasksModal: React.FC<{
   onClose: () => void;
   onSelectTask: (task: Task) => void;
 }> = ({ day, tasks, onClose, onSelectTask }) => {
+    const { i18n, t } = useTranslation();
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
             <div className="bg-surface rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-scaleIn" onClick={e => e.stopPropagation()}>
                 <header className="p-4 border-b border-border flex justify-between items-center">
-                    <h3 className="font-semibold text-text-primary">{day.toLocaleDateString('es-ES', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-secondary-focus" aria-label="Close">
+                    <h3 className="font-semibold text-text-primary">{t('modals.dayTasksTitle', { day: day.toLocaleDateString(i18n.language, { weekday: 'long', month: 'long', day: 'numeric' }) })}</h3>
+                    <button onClick={onClose} className="p-1 rounded-full hover:bg-secondary-focus" aria-label={t('common.close')}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                     </button>
                 </header>
@@ -48,6 +50,7 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpdateTask, onAddTaskForDate, currentUser }) => {
+    const { t, i18n } = useTranslation();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [dragOverDate, setDragOverDate] = useState<string | null>(null);
@@ -126,7 +129,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpda
         setDragOverDate(null);
     };
     
-    const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const WEEKDAYS = [t('weekdays.sun'), t('weekdays.mon'), t('weekdays.tue'), t('weekdays.wed'), t('weekdays.thu'), t('weekdays.fri'), t('weekdays.sat')];
     const today = new Date().toDateString();
 
     return (
@@ -135,10 +138,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpda
                 <div className="flex items-center gap-2">
                     <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-secondary-focus" aria-label="Previous month">&lt;</button>
                     <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-secondary-focus" aria-label="Next month">&gt;</button>
-                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 text-sm font-medium bg-secondary rounded-lg hover:bg-secondary-focus transition-colors">Hoy</button>
+                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 text-sm font-medium bg-secondary rounded-lg hover:bg-secondary-focus transition-colors">{t('common.today')}</button>
                 </div>
                 <h2 className="text-xl font-bold text-center">
-                    {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
+                    {currentDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
                 </h2>
                 <div className="w-28"></div> {/* Spacer to balance header */}
             </header>
@@ -170,7 +173,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpda
                                     <button
                                         onClick={() => onAddTaskForDate(date)}
                                         className="w-6 h-6 flex items-center justify-center rounded-full text-text-secondary bg-surface opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-white transition-all z-10"
-                                        title={`Añadir tarea para ${date.toLocaleDateString()}`}
+                                        title={t('tooltips.addTaskForDate', { date: date.toLocaleDateString(i18n.language) })}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                                     </button>
@@ -194,7 +197,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpda
                                         onClick={() => setDayModal({ date, tasks: dayTasks })}
                                         className="text-xs font-semibold text-primary hover:underline text-left mt-1 px-1.5"
                                     >
-                                        + {dayTasks.length - MAX_TASKS_SHOWN} más
+                                        + {dayTasks.length - MAX_TASKS_SHOWN} {t('common.more')}
                                     </button>
                                 )}
                             </div>

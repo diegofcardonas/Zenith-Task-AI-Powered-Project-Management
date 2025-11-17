@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Task, Status } from '../../types';
+import { useTranslation } from '../../i18n';
 
 interface TasksByStatusChartProps {
   tasks: Task[];
@@ -25,12 +26,13 @@ const DonutSegment: React.FC<{ stroke: string; strokeWidth: number; radius: numb
 );
 
 const TasksByStatusChart: React.FC<TasksByStatusChartProps> = ({ tasks, onStatusSelect, selectedStatus }) => {
+  const { t } = useTranslation();
   
   const STATUS_CONFIG = useMemo(() => ({
-    [Status.Todo]: { label: 'Por Hacer', color: 'text-status-todo', hex: '#60a5fa' },
-    [Status.InProgress]: { label: 'En Progreso', color: 'text-status-inprogress', hex: '#fbbf24' },
-    [Status.Done]: { label: 'Hecho', color: 'text-status-done', hex: '#4ade80' },
-  }), []);
+    [Status.Todo]: { label: t('common.todo'), color: 'text-status-todo', hex: '#60a5fa' },
+    [Status.InProgress]: { label: t('common.inProgress'), color: 'text-status-inprogress', hex: '#fbbf24' },
+    [Status.Done]: { label: t('common.done'), color: 'text-status-done', hex: '#4ade80' },
+  }), [t]);
 
   const data = useMemo(() => {
     const counts = {
@@ -93,7 +95,7 @@ const TasksByStatusChart: React.FC<TasksByStatusChartProps> = ({ tasks, onStatus
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-bold text-text-primary">{total}</span>
-            <span className="text-sm text-text-secondary">Tareas</span>
+            <span className="text-sm text-text-secondary">{t('common.tasks')}</span>
         </div>
       </div>
       <div className="flex flex-col gap-3">

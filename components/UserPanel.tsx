@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Role, UserStatus } from '../types';
+import { useTranslation } from '../i18n';
 
 interface UserPanelProps {
   currentUser: User;
@@ -16,6 +17,7 @@ const UserPanel: React.FC<UserPanelProps> = ({
   onClose,
   onUpdateUserStatus,
 }) => {
+  const { t } = useTranslation();
   const [isStatusSelectorOpen, setIsStatusSelectorOpen] = useState(false);
   const statusSelectorRef = useRef<HTMLDivElement>(null);
 
@@ -31,10 +33,10 @@ const UserPanel: React.FC<UserPanelProps> = ({
   }, []);
     
   const statusOptions: { status: UserStatus; label: string; color: string }[] = [
-    { status: UserStatus.Online, label: 'En línea', color: 'bg-green-500' },
-    { status: UserStatus.Away, label: 'Ausente', color: 'bg-yellow-500' },
-    { status: UserStatus.Busy, label: 'Ocupado', color: 'bg-red-500' },
-    { status: UserStatus.Offline, label: 'Desconectado', color: 'bg-gray-500' },
+    { status: UserStatus.Online, label: t('common.online'), color: 'bg-green-500' },
+    { status: UserStatus.Away, label: t('common.away'), color: 'bg-yellow-500' },
+    { status: UserStatus.Busy, label: t('common.busy'), color: 'bg-red-500' },
+    { status: UserStatus.Offline, label: t('common.offline'), color: 'bg-gray-500' },
   ];
 
   const currentStatusOption = statusOptions.find(o => o.status === currentUser.status) || statusOptions[0];
@@ -42,12 +44,12 @@ const UserPanel: React.FC<UserPanelProps> = ({
   return (
     <div className="absolute bottom-full mb-2 w-72 bg-surface rounded-lg shadow-lg border border-border z-50 animate-fadeIn flex flex-col">
       <div className="p-2">
-        <button onClick={() => { onOpenUserProfile(); onClose(); }} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm">Ver Perfil</button>
+        <button onClick={() => { onOpenUserProfile(); onClose(); }} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm">{t('sidebar.viewProfile')}</button>
         
         <div className="border-t border-border my-1"></div>
         
         <div className="p-2">
-            <p className="text-xs font-semibold text-text-secondary mb-2">Establecer tu estado</p>
+            <p className="text-xs font-semibold text-text-secondary mb-2">{t('sidebar.setStatus')}</p>
             <div className="relative" ref={statusSelectorRef}>
                 <button
                     onClick={() => setIsStatusSelectorOpen(p => !p)}
@@ -89,7 +91,7 @@ const UserPanel: React.FC<UserPanelProps> = ({
         <div className="border-t border-border my-1"></div>
         <button onClick={onLogout} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-red-400 hover:text-red-300 text-sm">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
-          Cerrar Sesión
+          {t('sidebar.logout')}
         </button>
       </div>
     </div>

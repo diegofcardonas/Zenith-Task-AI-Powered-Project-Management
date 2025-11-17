@@ -1,21 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { Task, User, Status } from '../types';
 import { generateRiskAnalysis } from '../services/geminiService';
+import { useTranslation } from '../i18n';
 
 const TasksByStatusChart: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
+    const { t } = useTranslation();
     const STATUS_CONFIG = {
-        [Status.Todo]: { label: 'Por Hacer', color: 'bg-status-todo' },
-        [Status.InProgress]: { label: 'En Progreso', color: 'bg-status-inprogress' },
-        [Status.Done]: { label: 'Hecho', color: 'bg-status-done' },
+        [Status.Todo]: { label: t('common.todo'), color: 'bg-status-todo' },
+        [Status.InProgress]: { label: t('common.inProgress'), color: 'bg-status-inprogress' },
+        [Status.Done]: { label: t('common.done'), color: 'bg-status-done' },
     };
     const data = useMemo(() => {
         const counts = { [Status.Todo]: 0, [Status.InProgress]: 0, [Status.Done]: 0 };
         tasks.forEach(t => counts[t.status]++);
         return Object.values(Status).map(s => ({ ...STATUS_CONFIG[s], count: counts[s]}));
-    }, [tasks]);
+    }, [tasks, STATUS_CONFIG]);
 
     const total = tasks.length;
-    if (total === 0) return <p className="text-text-secondary text-sm italic">No hay tareas para mostrar.</p>;
+    if (total === 0) return <p className="text-text-secondary text-sm italic">{t('projectDashboard.noTasksToShow')}</p>;
     
     return (
         <div className="space-y-2">
@@ -35,13 +37,14 @@ const TasksByStatusChart: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
 };
 
 const TasksByAssigneeChart: React.FC<{ tasks: Task[], users: User[] }> = ({ tasks, users }) => {
+    const { t } = useTranslation();
     const data = useMemo(() => {
-        const counts: { [key: string]: { user: User | { id: 'unassigned', name: 'Sin Asignar', avatar: '' }; count: number } } = {};
+        const counts: { [key: string]: { user: User | { id: 'unassigned', name: string, avatar: '' }; count: number } } = {};
         
         users.forEach(u => {
             counts[u.id] = { user: u, count: 0 };
         });
-        counts['unassigned'] = { user: { id: 'unassigned', name: 'Sin Asignar', avatar: '' }, count: 0 };
+        counts['unassigned'] = { user: { id: 'unassigned', name: t('projectDashboard.unassigned'), avatar: '' }, count: 0 };
 
         tasks.forEach(t => {
             const key = t.assigneeId || 'unassigned';
@@ -49,9 +52,9 @@ const TasksByAssigneeChart: React.FC<{ tasks: Task[], users: User[] }> = ({ task
         });
 
         return Object.values(counts).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
-    }, [tasks, users]);
+    }, [tasks, users, t]);
 
-    if (tasks.length === 0) return <p className="text-text-secondary text-sm italic">No hay tareas para mostrar.</p>;
+    if (tasks.length === 0) return <p className="text-text-secondary text-sm italic">{t('projectDashboard.noTasksToShow')}</p>;
 
     return (
         <div className="space-y-3">
@@ -92,12 +95,13 @@ interface ProjectDashboardProps {
 }
 
 const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks, users }) => {
+  const { t } = useTranslation();
   const [riskAnalysis, setRiskAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAnalyzeRisks = async () => {
       setIsAnalyzing(true);
-      const analysis = await generateRiskAnalysis(tasks, "este proyecto");
+      const analysis = await generateRiskAnalysis(tasks, t('modals.thisProject'));
       setRiskAnalysis(analysis);
       setIsAnalyzing(false);
   };
@@ -105,21 +109,21 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks, users }) => 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div className="bg-secondary rounded-lg p-6 animate-fadeIn">
-        <h2 className="text-xl font-semibold mb-4">Tareas por Estado</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('projectDashboard.tasksByStatus')}</h2>
         <TasksByStatusChart tasks={tasks} />
       </div>
       <div className="bg-secondary rounded-lg p-6 animate-fadeIn" style={{ animationDelay: '100ms' }}>
-        <h2 className="text-xl font-semibold mb-4">Tareas por Asignado</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('projectDashboard.tasksByAssignee')}</h2>
         <TasksByAssigneeChart tasks={tasks} users={users} />
       </div>
       <div className="bg-secondary rounded-lg p-6 animate-fadeIn lg:col-span-3" style={{ animationDelay: '200ms' }}>
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Análisis de Riesgos con IA</h2>
+            <h2 className="text-xl font-semibold">{t('modals.riskAnalysis')}</h2>
             <button onClick={handleAnalyzeRisks} disabled={isAnalyzing} className="px-3 py-1.5 text-sm bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5">
                 {isAnalyzing ? (
                     <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 ) : '✨'}
-                {isAnalyzing ? 'Analizando...' : 'Analizar Riesgos'}
+                {isAnalyzing ? t('modals.analyzing') : t('modals.analyzeRisks')}
             </button>
         </div>
         {isAnalyzing ? (
@@ -131,7 +135,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks, users }) => 
         ) : riskAnalysis ? (
             <div className="prose prose-invert max-w-none text-text-primary text-sm" dangerouslySetInnerHTML={renderMarkdown(riskAnalysis)}></div>
         ) : (
-            <p className="text-text-secondary text-sm italic">Haz clic en el botón para generar un análisis de riesgos para este proyecto.</p>
+            <p className="text-text-secondary text-sm italic">{tasks.length > 0 ? t('modals.riskAnalysisPrompt') : t('modals.noTasksToAnalyze')}</p>
         )}
       </div>
     </div>

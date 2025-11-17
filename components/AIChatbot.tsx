@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Task, List, User } from '../types';
 import { getAIChatResponse } from '../services/geminiService';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
 
 interface AIChatbotProps {
     tasks: Task[];
@@ -9,6 +11,8 @@ interface AIChatbotProps {
 }
 
 const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
+    const { t } = useTranslation();
+    const { actions } = useAppContext();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'model', parts: { text: string }[] }[]>([]);
     const [input, setInput] = useState('');
@@ -32,17 +36,27 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
 
             if (aiResponse.functionCalls && aiResponse.functionCalls.length > 0) {
                 for (const fc of aiResponse.functionCalls) {
-                    let actionText = `ejecutando una acción`;
-                    if(fc.name === 'create_task') actionText = `creando la tarea "${fc.args.title}"`;
-                    if(fc.name === 'update_task_status') actionText = `actualizando la tarea "${fc.args.taskTitle}"`;
-                    if(fc.name === 'assign_task') actionText = `asignando la tarea "${fc.args.taskTitle}"`;
+                    let actionKey = 'aiChat.actionFallback';
+                    let actionParams = {};
+                    if(fc.name === 'create_task') {
+                        actionKey = 'aiChat.actionCreating';
+                        actionParams = { title: fc.args.title };
+                    }
+                    if(fc.name === 'update_task_status') {
+                        actionKey = 'aiChat.actionUpdating';
+                        actionParams = { title: fc.args.taskTitle };
+                    }
+                    if(fc.name === 'assign_task') {
+                        actionKey = 'aiChat.actionAssigning';
+                        actionParams = { title: fc.args.taskTitle };
+                    }
                     
-                    const modelMessage = { role: 'model' as const, parts: [{ text: `De acuerdo, ${actionText}...` }] };
+                    const actionText = t(actionKey, actionParams);
+                    const modelMessage = { role: 'model' as const, parts: [{ text: t('aiChat.actionMessage', { actionText }) }] };
                     setMessages(prev => [...prev, modelMessage]);
 
-                    window.dispatchEvent(new CustomEvent('execute-ai-action', {
-                        detail: { action: fc.name, args: fc.args }
-                    }));
+                    // Dispatch event to be handled by AppContext
+                    actions.handleAIAction(fc.name, fc.args);
                 }
             } else {
                 const modelMessage = { role: 'model' as const, parts: [{ text: aiResponse.text }] };
@@ -80,7 +94,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
             <button
                 onClick={() => setIsOpen(p => !p)}
                 className="fixed bottom-6 right-6 bg-primary text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform duration-200 z-50"
-                aria-label="Abrir Asistente IA"
+                aria-label={t('aiChat.openAIAssistant')}
             >
                 {isOpen ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -92,8 +106,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
             {isOpen && (
                 <div className="fixed bottom-24 right-6 w-96 max-h-[70vh] bg-surface rounded-xl shadow-2xl flex flex-col border border-border z-50 animate-scaleIn">
                     <header className="p-4 border-b border-border">
-                        <h3 className="font-semibold text-text-primary">Asistente IA</h3>
-                        <p className="text-sm text-text-secondary">¡Pregúntame sobre tus proyectos!</p>
+                        <h3 className="font-semibold text-text-primary">{t('aiChat.title')}</h3>
+                        <p className="text-sm text-text-secondary">{t('aiChat.subtitle')}</p>
                     </header>
                     <div className="flex-grow p-4 overflow-y-auto space-y-4">
                         {messages.map((msg, index) => (
@@ -123,7 +137,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Ej: ¿Qué tareas están atrasadas?"
+                                placeholder={t('aiChat.placeholder')}
                                 className="w-full p-2 pr-10 bg-secondary rounded-lg border border-border focus:ring-primary focus:border-primary"
                                 disabled={isLoading}
                             />

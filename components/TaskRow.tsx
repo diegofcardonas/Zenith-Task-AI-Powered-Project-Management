@@ -1,24 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Task, User, Status, Priority, Role, List } from '../types';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
 
 interface TaskRowProps {
   task: Task;
-  users: User[];
-  onSelectTask: (task: Task) => void;
-  onUpdateTask: (task: Task) => void;
-  onDeleteTask: (taskId: string) => void;
-  currentUser: User;
-  allTasks: Task[];
-  allLists: List[];
-  onOpenBlockingTasks: (task: Task) => void;
-  logActivity: (taskId: string, text: string, user: User) => void;
-  showActions?: boolean;
-  isSelected: boolean;
-  onToggleSelection: (taskId: string) => void;
-  isDraggable: boolean;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
-  onDragEnter: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
-  onDragEnd: () => void;
+  isSelected?: boolean;
+  onToggleSelection?: (taskId: string) => void;
+  isDraggable?: boolean;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
+  onDragEnter?: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
+  onDragEnd?: () => void;
 }
 
 const statusConfig: { [key in Status]: string } = {
@@ -27,18 +19,12 @@ const statusConfig: { [key in Status]: string } = {
   [Status.Done]: 'bg-status-done/20 text-status-done',
 };
 
-const statusText: { [key in Status]: string } = {
-    [Status.Todo]: 'Por Hacer',
-    [Status.InProgress]: 'En Progreso',
-    [Status.Done]: 'Hecho',
-};
-
-
 const PriorityIcon: React.FC<{ priority: Priority }> = ({ priority }) => {
+    const { t } = useTranslation();
     const config = {
-        [Priority.High]: { iconColor: 'text-priority-high', label: 'Alta' },
-        [Priority.Medium]: { iconColor: 'text-priority-medium', label: 'Media' },
-        [Priority.Low]: { iconColor: 'text-priority-low', label: 'Baja' },
+        [Priority.High]: { iconColor: 'text-priority-high', label: t('common.high') },
+        [Priority.Medium]: { iconColor: 'text-priority-medium', label: t('common.medium') },
+        [Priority.Low]: { iconColor: 'text-priority-low', label: t('common.low') },
     };
     const { iconColor, label } = config[priority];
     return (
@@ -51,7 +37,11 @@ const PriorityIcon: React.FC<{ priority: Priority }> = ({ priority }) => {
     );
 };
 
-const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingClick: () => void; }> = ({ task, allTasks, onBlockingClick }) => {
+const DependencyIndicator: React.FC<{ task: Task; onBlockingClick: () => void; }> = ({ task, onBlockingClick }) => {
+  const { t } = useTranslation();
+  const { state } = useAppContext();
+  const { allTasks } = state;
+
   const isBlocked = (task.dependsOn || []).some(depId => {
     const depTask = allTasks.find(t => t.id === depId);
     return depTask && depTask.status !== Status.Done;
@@ -61,7 +51,7 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
 
   if (isBlocked) {
     return (
-      <div className="flex items-center text-amber-500" title="Esta tarea está bloqueada por otras tareas.">
+      <div className="flex items-center text-amber-500" title={t('tooltips.blocked')}>
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
         </svg>
@@ -72,7 +62,7 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
   if (blockingTasks.length > 0) {
     const taskTitles = blockingTasks.map(t => t.title).join(', ');
     return (
-      <button onClick={(e) => { e.stopPropagation(); onBlockingClick(); }} className="flex items-center gap-1 hover:text-primary transition-colors" title={`Esta tarea está bloqueando: ${taskTitles}`}>
+      <button onClick={(e) => { e.stopPropagation(); onBlockingClick(); }} className="flex items-center gap-1 hover:text-primary transition-colors" title={t('tooltips.isBlocking', { tasks: taskTitles })}>
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
           <path d="M8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
           <path d="M15.5 6.5a1 1 0 00-1-1h-1.382l-.447-1.342A2 2 0 0011.025 3H8.975a2 2 0 00-1.646 1.158L6.882 5.5H5.5a1 1 0 000 2h1.082l.858 5.146A2 2 0 009.423 14h1.154a2 2 0 001.983-1.854l.858-5.146H14.5a1 1 0 001-1z" />
@@ -86,8 +76,27 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
 };
 
 
-const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTask, onDeleteTask, currentUser, allTasks, allLists, onOpenBlockingTasks, logActivity, showActions = true, isSelected, onToggleSelection, isDraggable, onDragStart, onDragEnter, onDragEnd }) => {
-  const isReadOnly = currentUser.role === Role.Guest;
+const TaskRow: React.FC<TaskRowProps> = ({ 
+    task, 
+    isSelected = false, 
+    onToggleSelection = () => {}, 
+    isDraggable = false, 
+    onDragStart = () => {}, 
+    onDragEnter = () => {}, 
+    onDragEnd = () => {} 
+}) => {
+  const { state, actions } = useAppContext();
+  const { users, currentUser, allLists } = state;
+  const { handleUpdateTask, handleDeleteTask, setSelectedTaskId, logActivity, setTaskForBlockingModal, setIsBlockingTasksModalOpen } = actions;
+  const { t, i18n } = useTranslation();
+
+  const statusText: { [key in Status]: string } = {
+    [Status.Todo]: t('common.todo'),
+    [Status.InProgress]: t('common.inProgress'),
+    [Status.Done]: t('common.done'),
+  };
+    
+  const isReadOnly = currentUser!.role === Role.Guest;
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   const [isMoveMenuOpen, setIsMoveMenuOpen] = useState(false);
   const moveMenuRef = useRef<HTMLDivElement>(null);
@@ -107,27 +116,23 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value as Status;
     const oldStatus = task.status;
-    onUpdateTask({ ...task, status: newStatus });
-    logActivity(task.id, `cambió el estado de "${statusText[oldStatus]}" a "${statusText[newStatus]}"`, currentUser);
+    handleUpdateTask({ ...task, status: newStatus });
+    logActivity(task.id, `cambió el estado de "${statusText[oldStatus]}" a "${statusText[newStatus]}"`, currentUser!);
   };
 
   const handleAssigneeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newAssigneeId = e.target.value || null;
     const oldAssigneeName = users.find(u => u.id === task.assigneeId)?.name || 'nadie';
     const newAssigneeName = users.find(u => u.id === newAssigneeId)?.name || 'nadie';
-    onUpdateTask({ ...task, assigneeId: newAssigneeId });
-    logActivity(task.id, `cambió el asignado de "${oldAssigneeName}" a "${newAssigneeName}"`, currentUser);
-  };
-  
-  const handleDeleteClick = () => {
-    onDeleteTask(task.id);
+    handleUpdateTask({ ...task, assigneeId: newAssigneeId });
+    logActivity(task.id, `cambió el asignado de "${oldAssigneeName}" a "${newAssigneeName}"`, currentUser!);
   };
   
   const handleMoveTask = (newListId: string) => {
     const oldListName = allLists.find(l => l.id === task.listId)?.name || 'una lista';
     const newListName = allLists.find(l => l.id === newListId)?.name || 'otra lista';
-    onUpdateTask({ ...task, listId: newListId });
-    logActivity(task.id, `movió la tarea de "${oldListName}" a "${newListName}"`, currentUser);
+    handleUpdateTask({ ...task, listId: newListId });
+    logActivity(task.id, `movió la tarea de "${oldListName}" a "${newListName}"`, currentUser!);
     setIsMoveMenuOpen(false);
   };
 
@@ -150,9 +155,9 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
           />
       </div>
       <div className="col-span-6 sm:col-span-3 md:col-span-2 font-medium text-text-primary truncate flex items-center gap-2">
-        <DependencyIndicator task={task} allTasks={allTasks} onBlockingClick={() => onOpenBlockingTasks(task)} />
+        <DependencyIndicator task={task} onBlockingClick={() => { setTaskForBlockingModal(task); setIsBlockingTasksModalOpen(true); }} />
         <button 
-            onClick={() => onSelectTask(task)} 
+            onClick={() => setSelectedTaskId(task.id)} 
             className="text-left hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded truncate"
         >
             {task.title}
@@ -167,7 +172,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
           className="w-full bg-secondary border border-transparent hover:border-border rounded-md px-2 py-1 text-sm focus:ring-primary focus:border-primary disabled:opacity-70 disabled:cursor-not-allowed"
           onClick={e => e.stopPropagation()}
         >
-          <option value="">Sin Asignar</option>
+          <option value="">{t('common.unassigned')}</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
       </div>
@@ -185,7 +190,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
       </div>
 
       <div className={`col-span-2 hidden sm:block md:col-span-1 text-sm ${isOverdue ? 'text-priority-high font-semibold' : 'text-text-secondary'}`}>
-        {new Date(task.dueDate).toLocaleDateString(undefined, {
+        {new Date(task.dueDate).toLocaleDateString(i18n.language, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -195,13 +200,14 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
       <div className="col-span-2 hidden md:block text-sm text-text-secondary"><PriorityIcon priority={task.priority} /></div>
 
       <div className="col-span-2 flex items-center justify-end">
-        {showActions && !isReadOnly && (
+        {!isReadOnly && (
             <div className="flex items-center">
                 <div className="relative" ref={moveMenuRef}>
                     <button
                         onClick={(e) => { e.stopPropagation(); setIsMoveMenuOpen(p => !p); }}
                         className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-primary/10 transition-colors"
-                        aria-label="Mover Tarea"
+                        aria-label={t('tooltips.moveTask')}
+                        title={t('tooltips.moveTask')}
                     >
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -225,10 +231,11 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        onSelectTask(task);
+                        setSelectedTaskId(task.id);
                     }}
                     className="p-2 text-text-secondary hover:text-blue-500 rounded-full hover:bg-blue-500/10 transition-colors"
-                    aria-label="Editar Tarea"
+                    aria-label={t('tooltips.editTask')}
+                    title={t('tooltips.editTask')}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -238,10 +245,11 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteClick();
+                        handleDeleteTask(task.id);
                     }}
                     className="p-2 text-text-secondary hover:text-red-500 rounded-full hover:bg-red-500/10 transition-colors"
-                    aria-label="Eliminar Tarea"
+                    aria-label={t('tooltips.deleteTask')}
+                    title={t('tooltips.deleteTask')}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />

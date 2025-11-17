@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Task, User } from '../../types';
 import AvatarWithStatus from '../AvatarWithStatus';
+import { useTranslation } from '../../i18n';
 
 interface UserWorkloadListProps {
   users: User[];
@@ -11,6 +12,7 @@ interface UserWorkloadListProps {
 const ITEMS_PER_PAGE = 5;
 
 const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUserSelect }) => {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
 
   const workloadData = useMemo(() => {
@@ -44,7 +46,7 @@ const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUse
   if (workloadData.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-text-secondary italic">
-        No hay usuarios para mostrar con el filtro actual.
+        {t('admin.noUsersWithFilter')}
       </div>
     );
   }
@@ -56,16 +58,16 @@ const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUse
           <thead className="text-xs uppercase bg-secondary">
             <tr>
               <th scope="col" className="px-6 py-3">
-                Miembros
+                {t('admin.members')}
               </th>
               <th scope="col" className="px-6 py-3">
-                Equipo
+                {t('admin.team')}
               </th>
               <th scope="col" className="px-6 py-3">
-                Rol
+                {t('admin.role')}
               </th>
               <th scope="col" className="px-6 py-3 text-right">
-                Tareas Asignadas
+                {t('admin.assignedTasks')}
               </th>
             </tr>
           </thead>
@@ -84,7 +86,7 @@ const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUse
                   {user.team}
                 </td>
                 <td className="px-6 py-4">
-                  <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{user.role}</span>
+                  <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{t(`common.${user.role.toLowerCase()}`)}</span>
                 </td>
                 <td className="px-6 py-4 text-right text-text-primary font-semibold text-base">
                   {user.taskCount}
@@ -97,7 +99,7 @@ const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUse
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-4">
           <span className="text-sm text-text-secondary">
-            Página <span className="font-semibold text-text-primary">{currentPage}</span> de <span className="font-semibold text-text-primary">{totalPages}</span>
+            {t('common.page')} <span className="font-semibold text-text-primary">{currentPage}</span> {t('common.of')} <span className="font-semibold text-text-primary">{totalPages}</span>
           </span>
           <div className="inline-flex items-center gap-2">
             <button
@@ -105,14 +107,14 @@ const UserWorkloadList: React.FC<UserWorkloadListProps> = ({ users, tasks, onUse
               disabled={currentPage === 1}
               className="px-3 py-1.5 text-sm font-medium bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Anterior
+              {t('common.previous')}
             </button>
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 text-sm font-medium bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Siguiente
+              {t('common.next')}
             </button>
           </div>
         </div>

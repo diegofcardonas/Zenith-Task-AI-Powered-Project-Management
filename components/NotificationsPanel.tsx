@@ -1,5 +1,7 @@
 import React from 'react';
 import { Notification } from '../types';
+import { useTranslation } from '../i18n';
+import { useTimeAgo } from '../hooks/useTimeAgo';
 
 interface NotificationsPanelProps {
   notifications: Notification[];
@@ -8,23 +10,10 @@ interface NotificationsPanelProps {
   onNotificationClick: (notification: Notification) => void;
 }
 
-const timeAgo = (date: string): string => {
-    if (!date) return '';
-    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return `hace ${Math.floor(interval)} años`;
-    interval = seconds / 2592000;
-    if (interval > 1) return `hace ${Math.floor(interval)} meses`;
-    interval = seconds / 86400;
-    if (interval > 1) return `hace ${Math.floor(interval)} días`;
-    interval = seconds / 3600;
-    if (interval > 1) return `hace ${Math.floor(interval)} horas`;
-    interval = seconds / 60;
-    if (interval > 1) return `hace ${Math.floor(interval)} min`;
-    return `justo ahora`;
-};
-
 const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, setNotifications, onClose, onNotificationClick }) => {
+  const { t } = useTranslation();
+  const timeAgo = useTimeAgo();
+
   const handleMarkAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
@@ -39,9 +28,9 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, 
   return (
     <div className="absolute top-full mt-2 right-0 w-80 bg-surface rounded-lg shadow-lg border border-border z-50 animate-fadeIn flex flex-col max-h-[500px]">
       <header className="p-4 border-b border-border flex justify-between items-center">
-        <h3 className="font-semibold text-text-primary">Notificaciones</h3>
+        <h3 className="font-semibold text-text-primary">{t('notifications.title')}</h3>
         {unreadCount > 0 && (
-          <button onClick={handleMarkAllAsRead} className="text-xs text-primary hover:underline">Marcar todo como leído</button>
+          <button onClick={handleMarkAllAsRead} className="text-xs text-primary hover:underline">{t('notifications.markAllAsRead')}</button>
         )}
       </header>
       <div className="overflow-y-auto">
@@ -56,7 +45,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, 
             </button>
           ))
         ) : (
-          <p className="p-4 text-center text-sm text-text-secondary italic">No tienes notificaciones.</p>
+          <p className="p-4 text-center text-sm text-text-secondary italic">{t('notifications.noNotifications')}</p>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
+import { useTranslation } from '../i18n';
 
 interface UserProfileModalProps {
   user: User;
@@ -10,6 +11,7 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUpdateUser, isEditingSelf }) => {
+  const { t } = useTranslation();
   const [editedUser, setEditedUser] = useState(user);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -19,7 +21,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
 
   const handleSave = () => {
     if (!editedUser.name.trim()) {
-        alert("El nombre no puede estar vacío.");
+        alert(t('modals.usernameEmptyError'));
         return;
     }
     onUpdateUser({ ...editedUser, name: editedUser.name.trim() });
@@ -58,8 +60,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-text-primary">{isEditingSelf ? 'Editar Tu Perfil' : `Editar Perfil de ${user.name}`}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
+          <h2 className="text-2xl font-bold text-text-primary">{isEditingSelf ? t('modals.editYourProfile') : t('modals.editProfileOf', { name: user.name })}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -93,21 +95,21 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                 <div className="md:col-span-2 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="userName" className="text-sm font-semibold text-text-secondary">Nombre Completo</label>
+                            <label htmlFor="userName" className="text-sm font-semibold text-text-secondary">{t('modals.fullName')}</label>
                             <input id="userName" name="name" type="text" value={editedUser.name} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                         </div>
                         <div>
-                             <label htmlFor="userTitle" className="text-sm font-semibold text-text-secondary">Cargo</label>
+                             <label htmlFor="userTitle" className="text-sm font-semibold text-text-secondary">{t('modals.jobTitle')}</label>
                             <input id="userTitle" name="title" type="text" value={editedUser.title} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                         </div>
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="userEmail" className="text-sm font-semibold text-text-secondary">Correo</label>
+                            <label htmlFor="userEmail" className="text-sm font-semibold text-text-secondary">{t('modals.email')}</label>
                             <input id="userEmail" name="email" type="email" value={editedUser.email} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                         </div>
                         <div>
-                             <label htmlFor="userTeam" className="text-sm font-semibold text-text-secondary">Equipo</label>
+                             <label htmlFor="userTeam" className="text-sm font-semibold text-text-secondary">{t('modals.team')}</label>
                             <input id="userTeam" name="team" type="text" value={editedUser.team} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                         </div>
                     </div>
@@ -115,7 +117,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
             </div>
 
             <div className="mt-6">
-                <label htmlFor="userBio" className="text-sm font-semibold text-text-secondary">Acerca de mí</label>
+                <label htmlFor="userBio" className="text-sm font-semibold text-text-secondary">{t('modals.aboutMe')}</label>
                 <textarea
                     id="userBio"
                     name="bio"
@@ -123,17 +125,17 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
-                    placeholder="Escribe una breve biografía..."
+                    placeholder={t('modals.aboutMePlaceholder')}
                 />
             </div>
         </main>
 
         <footer className="p-6 border-t border-border flex justify-end gap-4">
             <button onClick={onClose} className="px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg hover:bg-secondary-focus transition-colors duration-200">
-                Cancelar
+                {t('common.cancel')}
             </button>
             <button onClick={handleSave} className="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">
-                Guardar Cambios
+                {t('modals.saveChanges')}
             </button>
         </footer>
       </div>

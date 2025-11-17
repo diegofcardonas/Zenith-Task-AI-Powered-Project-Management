@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Task, Priority } from '../../types';
+import { useTranslation } from '../../i18n';
 
 interface TasksByPriorityChartProps {
   tasks: Task[];
@@ -8,12 +9,13 @@ interface TasksByPriorityChartProps {
 }
 
 const TasksByPriorityChart: React.FC<TasksByPriorityChartProps> = ({ tasks, onPrioritySelect, selectedPriority }) => {
+  const { t } = useTranslation();
   
   const PRIORITY_CONFIG = useMemo(() => ({
-    [Priority.Low]: { label: 'Baja', color: 'bg-priority-low' },
-    [Priority.Medium]: { label: 'Media', color: 'bg-priority-medium' },
-    [Priority.High]: { label: 'Alta', color: 'bg-priority-high' },
-  }), []);
+    [Priority.Low]: { label: t('common.low'), color: 'bg-priority-low' },
+    [Priority.Medium]: { label: t('common.medium'), color: 'bg-priority-medium' },
+    [Priority.High]: { label: t('common.high'), color: 'bg-priority-high' },
+  }), [t]);
 
   const data = useMemo(() => {
     const counts = {
@@ -47,7 +49,7 @@ const TasksByPriorityChart: React.FC<TasksByPriorityChartProps> = ({ tasks, onPr
           >
             <div className="flex justify-between items-center mb-2 text-sm">
               <span className="font-semibold text-text-primary">{item.label}</span>
-              <span className="text-text-secondary font-medium">{item.count} Tareas</span>
+              <span className="text-text-secondary font-medium">{t('common.tasks', { count: item.count })}</span>
             </div>
             <div className="w-full bg-secondary rounded-full h-4">
               <div 

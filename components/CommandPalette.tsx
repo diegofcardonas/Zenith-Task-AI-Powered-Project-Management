@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { List, User } from '../types';
+import { useTranslation } from '../i18n';
 
 interface Command {
     id: string;
@@ -17,25 +18,26 @@ interface CommandPaletteProps {
 }
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, lists, currentUser, onCommand }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const commands: Command[] = useMemo(() => [
     ...lists.map(list => ({
         id: `list-${list.id}`,
-        name: `Ir al proyecto: ${list.name}`,
-        category: 'Navegar',
+        name: t('commandPalette.navigateToProject', { name: list.name }),
+        category: t('commandPalette.navigateTo'),
         action: () => onCommand('navigate_list', list.id)
     })),
-    { id: 'my-tasks', name: 'Ir a Mis Tareas', category: 'Navegar', action: () => onCommand('navigate_my_tasks') },
+    { id: 'my-tasks', name: t('commandPalette.myTasks'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_my_tasks') },
     ...(currentUser.role === 'Admin' ? [
-        { id: 'admin-dashboard', name: 'Ir al Dashboard de Admin', category: 'Navegar', action: () => onCommand('navigate_dashboard') },
-        { id: 'app-admin', name: 'Ir a Admin de App', category: 'Navegar', action: () => onCommand('navigate_admin') }
+        { id: 'admin-dashboard', name: t('commandPalette.adminDashboard'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_dashboard') },
+        { id: 'app-admin', name: t('commandPalette.appAdmin'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_admin') }
     ] : []),
-    { id: 'create-task', name: 'Crear nueva tarea', category: 'Crear', action: () => onCommand('create_task') },
-    { id: 'toggle-theme', name: 'Cambiar Modo Claro/Oscuro', category: 'General', action: () => onCommand('toggle_theme') },
-    { id: 'logout', name: 'Cerrar Sesión', category: 'General', action: () => onCommand('logout') },
-  ], [lists, currentUser, onCommand]);
+    { id: 'create-task', name: t('commandPalette.createTask'), category: t('commandPalette.create'), action: () => onCommand('create_task') },
+    { id: 'toggle-theme', name: t('commandPalette.toggleTheme'), category: t('commandPalette.general'), action: () => onCommand('toggle_theme') },
+    { id: 'logout', name: t('commandPalette.logout'), category: t('commandPalette.general'), action: () => onCommand('logout') },
+  ], [lists, currentUser, onCommand, t]);
 
   const filteredCommands = useMemo(() => {
     if (!searchTerm) return commands;
@@ -98,7 +100,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, lists,
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Escribe un comando o busca..."
+            placeholder={t('modals.commandPalettePlaceholder')}
             className="w-full bg-transparent text-lg focus:outline-none placeholder-text-secondary px-2"
             autoFocus
           />
@@ -128,7 +130,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, lists,
                 )
             })}
             {filteredCommands.length === 0 && (
-                <p className="p-4 text-center text-text-secondary">No se encontraron resultados.</p>
+                <p className="p-4 text-center text-text-secondary">{t('modals.noResultsFound')}</p>
             )}
         </div>
       </div>

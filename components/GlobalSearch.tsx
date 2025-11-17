@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Task, List, User } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import AvatarWithStatus from './AvatarWithStatus';
+import { useTranslation } from '../i18n';
 
 interface SearchResult {
     tasks: Task[];
@@ -19,6 +20,7 @@ interface GlobalSearchProps {
 }
 
 const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUsers, onSelectTask, onSelectList, onSelectUser }) => {
+    const { t } = useTranslation();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult | null>(null);
     const [isOpen, setIsOpen] = useState(false);
@@ -101,7 +103,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
                 <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Buscar (F)..."
+                    placeholder={t('header.searchPlaceholder')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length > 1 && setIsOpen(true)}
@@ -114,7 +116,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
                         <div className="max-h-96 overflow-y-auto">
                             {results.tasks.length > 0 && (
                                 <div className="p-2">
-                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">Tareas</h3>
+                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">{t('search.tasks')}</h3>
                                     {results.tasks.map(task => (
                                         <button key={task.id} onClick={() => handleSelectTask(task)} className="w-full text-left p-2 hover:bg-secondary-focus rounded-md text-sm truncate">
                                             {task.title}
@@ -124,7 +126,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
                             )}
                             {results.lists.length > 0 && (
                                 <div className="p-2 border-t border-border">
-                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">Proyectos</h3>
+                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">{t('search.projects')}</h3>
                                     {results.lists.map(list => (
                                         <button key={list.id} onClick={() => handleSelectList(list.id)} className="w-full text-left p-2 hover:bg-secondary-focus rounded-md text-sm truncate flex items-center gap-2">
                                             <span className={`w-3 h-3 rounded-full ${list.color}`}></span>
@@ -135,7 +137,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
                             )}
                             {results.users.length > 0 && (
                                 <div className="p-2 border-t border-border">
-                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">Usuarios</h3>
+                                    <h3 className="text-xs font-semibold text-text-secondary uppercase px-2 py-1">{t('search.users')}</h3>
                                     {results.users.map(user => (
                                         <button key={user.id} onClick={() => handleSelectUser(user)} className="w-full text-left p-2 hover:bg-secondary-focus rounded-md text-sm truncate flex items-center gap-2">
                                             <AvatarWithStatus user={user} className="w-6 h-6" />
@@ -146,7 +148,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
                             )}
                         </div>
                     ) : (
-                        <p className="p-4 text-center text-sm text-text-secondary">No se encontraron resultados para "{query}".</p>
+                        <p className="p-4 text-center text-sm text-text-secondary">{t('search.noResultsFor', { query })}</p>
                     )}
                 </div>
             )}

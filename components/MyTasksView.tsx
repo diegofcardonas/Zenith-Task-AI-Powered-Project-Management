@@ -1,41 +1,32 @@
 import React from 'react';
-import { Task, User, List, Notification } from '../types';
+import { Task, User, List } from '../types';
 import Header from './Header';
 import TaskRow from './TaskRow';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
 
-interface MyTasksViewProps {
-  allTasks: Task[];
-  allLists: List[];
-  currentUser: User;
-  users: User[];
-  onSelectTask: (task: Task) => void;
-  onToggleSidebar: () => void;
-  isSidebarOpen: boolean;
-  onOpenUserProfile: () => void;
-  onNavigateToList: (listId: string) => void;
-  setEditingUser: (user: User | null) => void;
-  notifications: Notification[];
-  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-  logActivity: (taskId: string, text: string, user: User) => void;
-  onNotificationClick: (notification: Notification) => void;
-}
+const MyTasksView: React.FC = () => {
+  const { t } = useTranslation();
+  const { state, actions } = useAppContext();
+  const { 
+    tasks: allTasks, 
+    lists: allLists, 
+    currentUser 
+  } = state;
 
-const MyTasksView: React.FC<MyTasksViewProps> = ({
-  allTasks,
-  allLists,
-  currentUser,
-  users,
-  onSelectTask,
-  onToggleSidebar,
-  isSidebarOpen,
-  onOpenUserProfile,
-  onNavigateToList,
-  setEditingUser,
-  notifications,
-  setNotifications,
-  logActivity,
-  onNotificationClick,
-}) => {
+  if (!currentUser) {
+    return null; 
+  }
+
+  const onNavigateToList = (listId: string) => {
+    const list = allLists.find(l => l.id === listId);
+    if(list) {
+      actions.setSelectedWorkspaceId(list.workspaceId);
+      actions.setSelectedListId(list.id);
+      actions.setActiveView('list');
+    }
+  };
+
   const myTasks = allTasks.filter(task => task.assigneeId === currentUser.id);
 
   const tasksByProject = myTasks.reduce((acc, task) => {
@@ -53,22 +44,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
 
   return (
     <main className="flex-grow flex flex-col h-full overflow-y-auto">
-      <Header
-        title="Mis Tareas"
-        onToggleSidebar={onToggleSidebar}
-        isSidebarOpen={isSidebarOpen}
-        currentUser={currentUser}
-        onOpenUserProfile={onOpenUserProfile}
-        allTasks={allTasks}
-        allLists={allLists}
-        allUsers={users}
-        onSelectTask={onSelectTask}
-        onNavigateToList={onNavigateToList}
-        setEditingUser={setEditingUser}
-        notifications={notifications}
-        setNotifications={setNotifications}
-        onNotificationClick={onNotificationClick}
-      />
+      <Header title={t('header.myTasks')} />
       <div className="flex-grow p-3 sm:p-6 space-y-6">
         {projectGroups.length > 0 ? (
           projectGroups.map(({ project, tasks }) => (
@@ -82,7 +58,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                     onClick={() => onNavigateToList(project.id)}
                     className="text-sm text-primary hover:underline"
                 >
-                    Ver Proyecto
+                    {t('sidebar.viewProject')}
                 </button>
               </div>
               <div className="divide-y divide-border">
@@ -90,22 +66,6 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                   <TaskRow
                     key={task.id}
                     task={task}
-                    users={users}
-                    onSelectTask={onSelectTask}
-                    onUpdateTask={() => {}} // My Tasks view is read-only for status/assignee
-                    onDeleteTask={() => {}} // Cannot delete from this view
-                    currentUser={currentUser}
-                    allTasks={allTasks}
-                    allLists={allLists}
-                    onOpenBlockingTasks={() => {}}
-                    logActivity={logActivity}
-                    showActions={false}
-                    isSelected={false}
-                    onToggleSelection={() => {}}
-                    isDraggable={false}
-                    onDragStart={() => {}}
-                    onDragEnter={() => {}}
-                    onDragEnd={() => {}}
                   />
                 ))}
               </div>
@@ -114,8 +74,8 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
         ) : (
           <div className="flex items-center justify-center h-full text-center">
             <div>
-              <h2 className="text-2xl font-semibold">No tienes tareas asignadas.</h2>
-              <p className="text-text-secondary mt-1">¡Buen trabajo!</p>
+              <h2 className="text-2xl font-semibold">{t('myTasks.noTasks')}</h2>
+              <p className="text-text-secondary mt-1">{t('myTasks.goodJob')}</p>
             </div>
           </div>
         )}

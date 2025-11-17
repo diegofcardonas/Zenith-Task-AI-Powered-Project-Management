@@ -1,29 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { Task, Status, User, Role } from '../types';
 import TaskCard from './TaskCard';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
 
-interface BoardViewProps {
-  tasks: Task[];
-  users: User[];
-  onUpdateTask: (task: Task) => void;
-  onSelectTask: (task: Task) => void;
-  currentUser: User;
-  allTasks: Task[];
-  onOpenBlockingTasks: (task: Task) => void;
-  onOpenUserProfile: (user: User) => void;
-}
+const BoardView: React.FC = () => {
+  const { state, actions } = useAppContext();
+  const { filteredTasks: tasks, users, currentUser, allTasks } = state;
+  const { handleUpdateTask, setSelectedTaskId, setTaskForBlockingModal, setIsBlockingTasksModalOpen, setEditingUserId } = actions;
+  const { t } = useTranslation();
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, users, onUpdateTask, onSelectTask, currentUser, allTasks, onOpenBlockingTasks, onOpenUserProfile }) => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<Status | null>(null);
   
-  const canDrag = currentUser.role !== Role.Guest;
+  const canDrag = currentUser!.role !== Role.Guest;
 
   const STATUS_CONFIG = useMemo(() => ({
-    [Status.Todo]: { title: 'Por Hacer', color: 'bg-status-todo' },
-    [Status.InProgress]: { title: 'En Progreso', color: 'bg-status-inprogress' },
-    [Status.Done]: { title: 'Hecho', color: 'bg-status-done' },
-  }), []);
+    [Status.Todo]: { title: t('board.todo'), color: 'bg-status-todo' },
+    [Status.InProgress]: { title: t('board.inProgress'), color: 'bg-status-inprogress' },
+    [Status.Done]: { title: t('board.done'), color: 'bg-status-done' },
+  }), [t]);
 
   const columns = useMemo(() => {
     const groupedTasks: { [key in Status]: Task[] } = {
@@ -64,7 +60,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, users, onUpdateTask, onSel
     
     const taskToMove = tasks.find(t => t.id === draggedTaskId);
     if (taskToMove && taskToMove.status !== targetStatus) {
-      onUpdateTask({ ...taskToMove, status: targetStatus });
+      handleUpdateTask({ ...taskToMove, status: targetStatus });
     }
     
     setDraggedTaskId(null);
@@ -95,18 +91,18 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, users, onUpdateTask, onSel
                         <TaskCard
                             task={task}
                             user={users.find(u => u.id === task.assigneeId)}
-                            onSelectTask={onSelectTask}
+                            onSelectTask={() => setSelectedTaskId(task.id)}
                             onDragStart={handleDragStart}
                             isDraggable={canDrag}
                             allTasks={allTasks}
-                            onOpenBlockingTasks={onOpenBlockingTasks}
-                            onOpenUserProfile={onOpenUserProfile}
+                            onOpenBlockingTasks={() => { setTaskForBlockingModal(task); setIsBlockingTasksModalOpen(true); }}
+                            onOpenUserProfile={(user) => setEditingUserId(user.id)}
                         />
                     </div>
                 ))
             ) : (
                 <div className="flex items-center justify-center h-full text-text-secondary text-sm italic p-4">
-                    Arrastra una tarea aquí o crea una nueva.
+                    {t('board.dropMessage')}
                 </div>
             )}
           </div>

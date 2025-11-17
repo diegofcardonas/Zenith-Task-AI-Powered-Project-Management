@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { List, Folder } from '../types';
+import { useTranslation } from '../i18n';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const COLORS = [
 ];
 
 const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, listToEdit, folders, workspaceId }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState(COLORS[10]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -40,7 +42,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, li
     if (name.trim()) {
       onSave(name.trim(), color, selectedFolderId);
     } else {
-      alert("El nombre del proyecto no puede estar vacío.");
+      alert(t('modals.projectNameEmptyError'));
     }
   };
 
@@ -57,8 +59,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, li
     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn" onClick={onClose} role="dialog" aria-modal="true">
       <div className="bg-surface rounded-xl shadow-2xl w-full max-w-md flex flex-col animate-scaleIn" onClick={e => e.stopPropagation()}>
         <header className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-text-primary">{isEditing ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}</h2>
-           <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar">
+          <h2 className="text-2xl font-bold text-text-primary">{isEditing ? t('modals.editProject') : t('modals.createProject')}</h2>
+           <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -66,28 +68,28 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, li
         </header>
         <main className="p-6 space-y-4">
             <div>
-                <label htmlFor="projectName" className="text-sm font-semibold text-text-secondary">Nombre del Proyecto</label>
+                <label htmlFor="projectName" className="text-sm font-semibold text-text-secondary">{t('modals.projectName')}</label>
                 <input
                     id="projectName"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="p. ej. Rediseño de Sitio Web"
+                    placeholder={t('modals.projectNamePlaceholder')}
                     className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
                     autoFocus
                 />
             </div>
             {availableFolders.length > 0 && (
                 <div>
-                    <label htmlFor="folderId" className="text-sm font-semibold text-text-secondary">Carpeta (Opcional)</label>
+                    <label htmlFor="folderId" className="text-sm font-semibold text-text-secondary">{t('modals.folderOptional')}</label>
                     <select
                         id="folderId"
                         value={selectedFolderId || ''}
                         onChange={(e) => setSelectedFolderId(e.target.value || null)}
                         className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
                     >
-                        <option value="">Sin carpeta</option>
+                        <option value="">{t('modals.noFolder')}</option>
                         {availableFolders.map(folder => (
                             <option key={folder.id} value={folder.id}>{folder.name}</option>
                         ))}
@@ -95,7 +97,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, li
                 </div>
             )}
             <div>
-                <label className="text-sm font-semibold text-text-secondary">Color</label>
+                <label className="text-sm font-semibold text-text-secondary">{t('modals.color')}</label>
                 <div className="grid grid-cols-8 gap-2 mt-2">
                     {COLORS.map(c => (
                         <button 
@@ -115,10 +117,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSave, li
         </main>
         <footer className="p-6 border-t border-border flex justify-end gap-4">
           <button onClick={onClose} className="px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg hover:bg-secondary-focus transition-colors duration-200">
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button onClick={handleSaveClick} className="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">
-            {isEditing ? 'Guardar Cambios' : 'Crear Proyecto'}
+            {isEditing ? t('common.saveChanges') : t('modals.create')}
           </button>
         </footer>
       </div>

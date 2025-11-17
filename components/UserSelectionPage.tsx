@@ -1,6 +1,7 @@
 import React from 'react';
 import { User } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
+import { useTranslation } from '../i18n';
 
 interface UserSelectionPageProps {
   users: User[];
@@ -8,11 +9,12 @@ interface UserSelectionPageProps {
 }
 
 const UserSelectionPage: React.FC<UserSelectionPageProps> = ({ users, onSelectUser }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-2xl text-center">
-        <h1 className="text-4xl font-bold text-text-primary mb-2">Bienvenido a Zenith Task</h1>
-        <p className="text-lg text-text-secondary mb-8">Por favor, selecciona tu perfil para continuar</p>
+        <h1 className="text-4xl font-bold text-text-primary mb-2">{t('userSelection.welcome')}</h1>
+        <p className="text-lg text-text-secondary mb-8">{t('userSelection.selectProfile')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {users.map(user => (
             <button

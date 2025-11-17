@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Task, User, Priority, Status, Role } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
+import { useTranslation } from '../i18n';
 
 const PRIORITY_COLORS: { [key in Priority]: { bg: string; border: string } } = {
     [Priority.High]: { bg: 'bg-priority-high/70', border: 'border-priority-high' },
@@ -32,20 +33,21 @@ const Tooltip: React.FC<{ task: Task; user: User | undefined; left: number; top:
 };
 
 const TimelineHeader: React.FC<{ dateRange: Date[]; dayWidth: number }> = React.memo(({ dateRange, dayWidth }) => {
+    const { i18n } = useTranslation();
     const months = useMemo(() => {
         const monthMap: { [key: string]: { name: string; colSpan: number } } = {};
         dateRange.forEach(day => {
             const monthKey = `${day.getFullYear()}-${day.getMonth()}`;
             if (!monthMap[monthKey]) {
                 monthMap[monthKey] = {
-                    name: day.toLocaleString('es-ES', { month: 'long', year: 'numeric' }),
+                    name: day.toLocaleString(i18n.language, { month: 'long', year: 'numeric' }),
                     colSpan: 0
                 };
             }
             monthMap[monthKey].colSpan++;
         });
         return Object.values(monthMap);
-    }, [dateRange]);
+    }, [dateRange, i18n.language]);
 
     return (
         // Set fixed height and flex layout to vertically center content across the two rows
@@ -82,6 +84,7 @@ interface GanttViewProps {
 }
 
 const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, users, onUpdateTask, currentUser, logActivity }) => {
+    const { t } = useTranslation();
     const [tooltip, setTooltip] = useState<{ task: Task; user: User | undefined; x: number; y: number } | null>(null);
     const [sidebarWidth, setSidebarWidth] = useState(300);
     const isResizingSidebar = useRef(false);
@@ -364,7 +367,7 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
     const todayLinePosition = getDaysDiff(startDate.toISOString(), new Date().toISOString());
 
     if (sortedTasks.length === 0) {
-        return <div className="flex items-center justify-center h-full bg-surface rounded-lg"><p className="text-text-secondary italic">No hay tareas con fechas para mostrar en el diagrama de Gantt.</p></div>;
+        return <div className="flex items-center justify-center h-full bg-surface rounded-lg"><p className="text-text-secondary italic">{t('mainContent.noTasksForGantt')}</p></div>;
     }
 
     const timelineWidth = totalDays * dayWidth;
@@ -376,7 +379,7 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
             <div className="flex-grow grid h-full" style={{ gridTemplateColumns: `${sidebarWidth}px 2px 1fr` }}>
                 {/* Task List */}
                 <div className="border-r border-border flex flex-col" style={{ width: `${sidebarWidth}px` }}>
-                    <div className="font-semibold text-text-primary p-2 h-[68px] flex items-center border-b border-border sticky top-0 bg-surface z-10">Nombre de la Tarea</div>
+                    <div className="font-semibold text-text-primary p-2 h-[68px] flex items-center border-b border-border sticky top-0 bg-surface z-10">{t('gantt.taskName')}</div>
                     <div ref={taskListRef} className="overflow-y-scroll overflow-x-hidden" onScroll={() => handleScroll('list')}>
                         <div className="relative" style={{ height: `${ganttHeight}px` }}>
                              {Object.values(taskPositions).map(({ top, task }) => (

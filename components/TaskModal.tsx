@@ -1,25 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Task, User, Status, Priority, Subtask, Role, Comment, Attachment, Activity, Notification, TaskTemplate, List } from '../types';
-import { generateSubtasks, generateTaskDescription, generateTaskTitleAndDescription, suggestTaskDetails } from '../services/geminiService';
+import { Task, User, Status, Priority, Subtask, Role, Comment, Attachment, List } from '../types';
+import { generateSubtasks, generateTaskDescription, generateTaskTitleAndDescription, suggestTaskDetails, generateSmartReplies } from '../services/geminiService';
 import { useDebounce } from '../hooks/useDebounce';
 import AvatarWithStatus from './AvatarWithStatus';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslation } from '../i18n';
+import { useTimeAgo } from '../hooks/useTimeAgo';
 
-interface TaskModalProps {
-  task: Task;
-  onClose: () => void;
-  onUpdateTask: (task: Task) => void;
-  onDeleteTask: (taskId: string) => void;
-  users: User[];
-  allLists: List[];
-  currentUser: User;
-  allTasks: Task[];
-  onOpenUserProfile: (user: User) => void;
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
-  onSaveTemplate: (name: string, taskData: Partial<Task>) => void;
-  logActivity: (taskId: string, text: string, user: User) => void;
-}
-
-// Fix: Defined a recursive type for comments with replies to resolve typing errors in the component.
 interface CommentWithReplies extends Comment {
   replies: CommentWithReplies[];
 }
@@ -48,7 +35,15 @@ const renderMarkdown = (text: string) => {
     return { __html: html };
 };
 
-const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDeleteTask, users, allLists, currentUser, allTasks, onOpenUserProfile, addNotification, onSaveTemplate, logActivity }) => {
+const TaskModal: React.FC = () => {
+  const { state, actions } = useAppContext();
+  const { selectedTask: task, users, allLists, currentUser, allTasks } = state;
+  const { setSelectedTaskId, handleUpdateTask, handleDeleteTask, setEditingUserId, addNotification, handleSaveTemplate, logActivity } = actions;
+  const { t, i18n } = useTranslation();
+  const timeAgo = useTimeAgo();
+    
+  if (!task || !currentUser) return null;
+
   const [editedTask, setEditedTask] = useState<Task>(task);
   const [isGeneratingSubtasks, setIsGeneratingSubtasks] = useState(false);
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
@@ -64,6 +59,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
   const [suggestedDetails, setSuggestedDetails] = useState<{ priority?: Priority; assigneeId?: string }>({});
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [descriptionView, setDescriptionView] = useState<'write' | 'preview'>('write');
+  const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
+  const [isGeneratingReplies, setIsGeneratingReplies] = useState(false);
   
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const dependencyPickerRef = useRef<HTMLDivElement>(null);
@@ -75,9 +72,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
   const isReadOnly = currentUser.role === Role.Guest;
 
   const statusText: { [key in Status]: string } = {
-    [Status.Todo]: 'Por Hacer',
-    [Status.InProgress]: 'En Progreso',
-    [Status.Done]: 'Hecho',
+    [Status.Todo]: t('common.todo'),
+    [Status.InProgress]: t('common.inProgress'),
+    [Status.Done]: t('common.done'),
   };
 
   useEffect(() => {
@@ -114,22 +111,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     getSuggestions();
   }, [debouncedTitle, users, task.title]);
 
-  const timeAgo = (date: string): string => {
-    if (!date) return '';
-    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return `hace ${Math.floor(interval)} años`;
-    interval = seconds / 2592000;
-    if (interval > 1) return `hace ${Math.floor(interval)} meses`;
-    interval = seconds / 86400;
-    if (interval > 1) return `hace ${Math.floor(interval)} días`;
-    interval = seconds / 3600;
-    if (interval > 1) return `hace ${Math.floor(interval)} horas`;
-    interval = seconds / 60;
-    if (interval > 1) return `hace ${Math.floor(interval)} min`;
-    return `justo ahora`;
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'reminder') {
@@ -146,13 +127,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
         const newListName = allLists.find(l => l.id === editedTask.listId)?.name || 'otra lista';
         logActivity(task.id, `movió la tarea de "${oldListName}" a "${newListName}"`, currentUser);
     }
-    onUpdateTask(editedTask);
-    onClose();
+    handleUpdateTask(editedTask);
+    setSelectedTaskId(null);
   };
 
   const handleDelete = () => {
-    onDeleteTask(task.id);
-    onClose();
+    handleDeleteTask(task.id);
   };
 
   const handleGenerateSubtasks = async () => {
@@ -176,7 +156,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
   };
   
   const handleGenerateTitleAndDescription = async () => {
-    const userPrompt = window.prompt("Describe brevemente la tarea que quieres crear:");
+    const userPrompt = window.prompt(t('aiChat.promptForTaskGeneration'));
     if (!userPrompt || userPrompt.trim() === '') return;
 
     setIsGeneratingTitle(true);
@@ -234,7 +214,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
             if (userId && userId !== currentUser.id) {
                 addNotification({
                     userId,
-                    text: `${currentUser.name} te mencionó en un comentario en la tarea "${editedTask.title}"`,
+                    text: t('notifications.mentionMessage', { name: currentUser.name, taskTitle: editedTask.title }),
                     link: { type: 'task', taskId: editedTask.id, listId: editedTask.listId }
                 });
             }
@@ -242,6 +222,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
         setEditedTask(prev => ({...prev, comments: [...prev.comments, newComment]}));
         setNewCommentText('');
         setReplyingTo(null);
+        setSuggestedReplies([]);
     }
   };
 
@@ -287,7 +268,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     };
 
     const handleDeleteComment = (commentId: string) => {
-        if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+        if (window.confirm(t('modals.confirmDeleteComment'))) {
             setEditedTask(prev => ({
                 ...prev,
                 comments: prev.comments.filter(c => c.id !== commentId)
@@ -374,11 +355,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     setEditedTask(prev => ({ ...prev, attachments: (prev.attachments || []).filter(att => att.id !== id) }));
   };
 
-  const handleSaveTemplate = () => {
-    const name = window.prompt("Ingresa un nombre para esta plantilla:");
+  const handleSaveTemplateClick = () => {
+    const name = window.prompt(t('modals.templateNamePrompt'));
     if (name) {
         const { id, createdAt, comments, attachments, ...taskData } = editedTask;
-        onSaveTemplate(name, taskData);
+        handleSaveTemplate(name, taskData);
     }
   };
   
@@ -392,13 +373,21 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     return renderMarkdown(processedText);
   };
   
+  const handleGetSmartReplies = async () => {
+    if(isGeneratingReplies || editedTask.comments.length === 0) return;
+    setIsGeneratingReplies(true);
+    const replies = await generateSmartReplies(editedTask.comments, editedTask.title, currentUser);
+    setSuggestedReplies(replies);
+    setIsGeneratingReplies(false);
+  }
+  
   const CommentComponent: React.FC<{comment: CommentWithReplies}> = ({ comment }) => {
     const isEditing = editingCommentId === comment.id;
     const isReplying = replyingTo === comment.id;
 
     return (
         <div className="flex items-start gap-3 group">
-            <button onClick={() => onOpenUserProfile(comment.user)} className="flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary"><AvatarWithStatus user={comment.user} className="w-8 h-8" /></button>
+            <button onClick={() => setEditingUserId(comment.user.id)} className="flex-shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary"><AvatarWithStatus user={comment.user} className="w-8 h-8" /></button>
             <div className="flex-1">
                 <div className="bg-secondary p-3 rounded-lg">
                     <div className="flex items-center justify-between">
@@ -409,8 +398,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
                         <div className="mt-2">
                             <textarea value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} className="w-full p-2 bg-surface rounded-md border border-border" rows={2}/>
                             <div className="flex items-center gap-2 mt-1">
-                                <button onClick={handleSaveEditedComment} className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-focus">Guardar</button>
-                                <button onClick={handleCancelEditComment} className="px-2 py-1 text-xs bg-secondary-focus text-text-secondary rounded hover:bg-border">Cancelar</button>
+                                <button onClick={handleSaveEditedComment} className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-focus">{t('common.save')}</button>
+                                <button onClick={handleCancelEditComment} className="px-2 py-1 text-xs bg-secondary-focus text-text-secondary rounded hover:bg-border">{t('common.cancel')}</button>
                             </div>
                         </div>
                     ) : (
@@ -426,7 +415,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
                         </div>
                     )}
                 </div>
-                 {isReplying && <CommentInput parentId={comment.id} onAddComment={handleAddComment} currentUser={currentUser} />}
+                 {isReplying && <CommentInput parentId={comment.id} onAddComment={handleAddComment} />}
                  {comment.replies.length > 0 && (
                     <div className="mt-3 pl-6 border-l-2 border-border/50 space-y-3">
                         {comment.replies.map(reply => <CommentComponent key={reply.id} comment={reply} />)}
@@ -437,25 +426,40 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     );
   }
 
-  const CommentInput: React.FC<{ parentId?: string, onAddComment: (text: string, parentId?: string) => void, currentUser: User}> = ({ parentId, onAddComment, currentUser }) => {
-    const [text, setText] = useState('');
+  const CommentInput: React.FC<{ parentId?: string, onAddComment: (text: string, parentId?: string) => void }> = ({ parentId, onAddComment }) => {
     return (
         <div className="flex items-start gap-3 mt-4">
             <AvatarWithStatus user={currentUser} className="w-8 h-8 mt-1 flex-shrink-0" />
             <div className="flex-1 relative">
                 <textarea 
-                    value={text} 
-                    onChange={e => setText(e.target.value)} 
-                    placeholder="Escribe un comentario... escribe @ para mencionar" 
+                    value={newCommentText} 
+                    onChange={handleCommentChange}
+                    onFocus={handleGetSmartReplies}
+                    ref={commentInputRef}
+                    placeholder={t('modals.commentPlaceholder')} 
                     className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" 
                     rows={2}
                     autoFocus={!!parentId}
                 />
+                 { (suggestedReplies.length > 0 || isGeneratingReplies) &&
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {isGeneratingReplies ? (
+                           <button disabled className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full flex items-center gap-1"><Spinner /> {t('modals.suggesting')}</button>
+                        ) : (
+                             <button onClick={handleGetSmartReplies} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 flex items-center gap-1">{t('modals.suggestReplies')}</button>
+                        )}
+                        {suggestedReplies.map((reply, i) => (
+                             <button key={i} onClick={() => setNewCommentText(reply)} className="px-2 py-1 text-xs bg-secondary-focus text-text-secondary rounded-full hover:bg-border">
+                                 {reply}
+                             </button>
+                        ))}
+                    </div>
+                }
                 <div className="flex items-center gap-2 mt-2">
-                    <button onClick={() => onAddComment(text, parentId)} className="px-4 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-focus transition-colors">
-                        {parentId ? 'Responder' : 'Comentar'}
+                    <button onClick={() => onAddComment(newCommentText, parentId)} className="px-4 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-focus transition-colors">
+                        {parentId ? t('modals.reply') : t('modals.comment')}
                     </button>
-                    {parentId && <button onClick={() => setReplyingTo(null)} className="px-4 py-1.5 bg-secondary-focus text-text-secondary text-sm font-semibold rounded-lg hover:bg-border">Cancelar</button>}
+                    {parentId && <button onClick={() => setReplyingTo(null)} className="px-4 py-1.5 bg-secondary-focus text-text-secondary text-sm font-semibold rounded-lg hover:bg-border">{t('common.cancel')}</button>}
                 </div>
             </div>
         </div>
@@ -469,35 +473,35 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
         <header className="p-6 border-b border-border flex justify-between items-start gap-4">
             <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2">
-                    <input type="text" name="title" value={editedTask.title} onChange={handleInputChange} className="text-2xl font-bold bg-transparent focus:outline-none w-full text-text-primary disabled:text-text-secondary truncate" placeholder="Título de la Tarea" readOnly={isReadOnly}/>
+                    <input type="text" name="title" value={editedTask.title} onChange={handleInputChange} className="text-2xl font-bold bg-transparent focus:outline-none w-full text-text-primary disabled:text-text-secondary truncate" placeholder={t('modals.taskTitlePlaceholder')} readOnly={isReadOnly}/>
                     {!isReadOnly && (
-                        <button onClick={handleGenerateTitleAndDescription} disabled={isGeneratingTitle} className="p-2 text-primary rounded-full hover:bg-primary/20 disabled:opacity-50 disabled:cursor-wait flex-shrink-0" title="Generar título y descripción con IA">
+                        <button onClick={handleGenerateTitleAndDescription} disabled={isGeneratingTitle} className="p-2 text-primary rounded-full hover:bg-primary/20 disabled:opacity-50 disabled:cursor-wait flex-shrink-0" title={t('modals.generateTitleDescWithAI')}>
                             {isGeneratingTitle ? <Spinner /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
                         </button>
                     )}
                 </div>
-                {isSuggesting && <div className="text-xs text-text-secondary italic mt-1">Buscando sugerencias de IA...</div>}
+                {isSuggesting && <div className="text-xs text-text-secondary italic mt-1">{t('modals.searchingForSuggestions')}</div>}
                 {(suggestedDetails.priority || suggestedDetails.assigneeId) && (
                     <div className="mt-2 p-2 bg-primary/10 rounded-md flex items-center justify-between gap-2 text-sm">
-                        <span>✨ Sugerencia IA: {suggestedDetails.priority && `Prioridad ${suggestedDetails.priority}`} {suggestedDetails.assigneeId && `Asignar a ${users.find(u => u.id === suggestedDetails.assigneeId)?.name}`}</span>
-                        <button onClick={() => applySuggestion(suggestedDetails)} className="px-2 py-0.5 text-xs bg-primary text-white rounded-full hover:bg-primary-focus">Aplicar</button>
+                        <span>{t('modals.aiSuggestion')} {suggestedDetails.priority && `Priority ${suggestedDetails.priority}`} {suggestedDetails.assigneeId && `Assign to ${users.find(u => u.id === suggestedDetails.assigneeId)?.name}`}</span>
+                        <button onClick={() => applySuggestion(suggestedDetails)} className="px-2 py-0.5 text-xs bg-primary text-white rounded-full hover:bg-primary-focus">{t('modals.apply')}</button>
                     </div>
                 )}
             </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white flex-shrink-0" aria-label="Cerrar"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <button onClick={() => setSelectedTaskId(null)} className="text-gray-400 hover:text-white flex-shrink-0" aria-label={t('common.close')}><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
         </header>
         <main className="p-6 overflow-y-auto flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
                 <div>
                     <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center border-b border-border">
-                             <button onClick={() => setDescriptionView('write')} className={`px-3 py-1 text-sm font-semibold ${descriptionView === 'write' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>Escribir</button>
-                             <button onClick={() => setDescriptionView('preview')} className={`px-3 py-1 text-sm font-semibold ${descriptionView === 'preview' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>Previsualizar</button>
+                             <button onClick={() => setDescriptionView('write')} className={`px-3 py-1 text-sm font-semibold ${descriptionView === 'write' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>{t('modals.write')}</button>
+                             <button onClick={() => setDescriptionView('preview')} className={`px-3 py-1 text-sm font-semibold ${descriptionView === 'preview' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>{t('modals.preview')}</button>
                         </div>
-                        {!isReadOnly && <button onClick={handleGenerateDescription} disabled={isGeneratingDesc || !editedTask.title} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">{isGeneratingDesc ? <Spinner /> : '✨'}{isGeneratingDesc ? 'Generando...' : 'Generar con IA'}</button>}
+                        {!isReadOnly && <button onClick={handleGenerateDescription} disabled={isGeneratingDesc || !editedTask.title} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">{isGeneratingDesc ? <Spinner /> : '✨'}{isGeneratingDesc ? t('modals.generating') : t('modals.generateWithAI')}</button>}
                     </div>
                     {descriptionView === 'write' ? (
-                        <textarea id="description" name="description" value={editedTask.description} onChange={handleInputChange} className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary min-h-[120px]" placeholder="Añade una descripción más detallada..." readOnly={isReadOnly} />
+                        <textarea id="description" name="description" value={editedTask.description} onChange={handleInputChange} className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary min-h-[120px]" placeholder={t('modals.addMoreDetail')} readOnly={isReadOnly} />
                     ) : (
                         <div className="w-full p-2 bg-secondary rounded-md border border-border min-h-[120px] prose prose-invert max-w-none text-text-primary" dangerouslySetInnerHTML={renderMarkdown(editedTask.description)}></div>
                     )}
@@ -505,10 +509,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
                 
                  <div>
                     <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-semibold text-text-secondary">Adjuntos</label>
+                        <label className="text-sm font-semibold text-text-secondary">{t('modals.attachments')}</label>
                         {!isReadOnly && (
                             <button onClick={() => attachmentInputRef.current?.click()} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 flex items-center gap-1">
-                                + Adjuntar Archivo
+                                {t('modals.attachFile')}
                             </button>
                         )}
                         <input type="file" multiple ref={attachmentInputRef} onChange={handleFileChange} className="hidden" />
@@ -525,60 +529,54 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
 
                 <div>
                     <div className="flex justify-between items-center">
-                        <label className="text-sm font-semibold text-text-secondary">{`Subtareas (${editedTask.subtasks.filter(st => st.completed).length}/${editedTask.subtasks.length})`}</label>
-                         {!isReadOnly && <button onClick={handleGenerateSubtasks} disabled={isGeneratingSubtasks || !editedTask.title} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">{isGeneratingSubtasks ? <Spinner /> : '✨'}{isGeneratingSubtasks ? 'Generando...' : 'Generar con IA'}</button>}
+                        <label className="text-sm font-semibold text-text-secondary">{t('modals.subtasksCompleted', { completed: editedTask.subtasks.filter(st => st.completed).length, total: editedTask.subtasks.length })}</label>
+                         {!isReadOnly && <button onClick={handleGenerateSubtasks} disabled={isGeneratingSubtasks || !editedTask.title} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">{isGeneratingSubtasks ? <Spinner /> : '✨'}{isGeneratingSubtasks ? t('modals.generating') : t('modals.generateWithAI')}</button>}
                     </div>
                     <div className="mt-2 space-y-2">
-                        {editedTask.subtasks.map(subtask => (<div key={subtask.id} className="flex items-center gap-2 bg-secondary p-2 rounded-md group"><input type="checkbox" checked={subtask.completed} onChange={() => handleSubtaskToggle(subtask.id)} disabled={isReadOnly} className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary" /><span className={`flex-grow ${subtask.completed ? 'line-through text-text-secondary' : ''}`}>{subtask.text}</span>{!isReadOnly && <button onClick={() => handleDeleteSubtask(subtask.id)} className="p-1 text-text-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Eliminar subtarea"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}</div>))}
-                        {!isReadOnly && <input type="text" value={newSubtaskText} onChange={(e) => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder="+ Añadir una subtarea" className="w-full bg-transparent p-2 focus:outline-none placeholder-text-secondary" />}
+                        {editedTask.subtasks.map(subtask => (<div key={subtask.id} className="flex items-center gap-2 bg-secondary p-2 rounded-md group"><input type="checkbox" checked={subtask.completed} onChange={() => handleSubtaskToggle(subtask.id)} disabled={isReadOnly} className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary" /><span className={`flex-grow ${subtask.completed ? 'line-through text-text-secondary' : ''}`}>{subtask.text}</span>{!isReadOnly && <button onClick={() => handleDeleteSubtask(subtask.id)} className="p-1 text-text-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title={t('tooltips.deleteSubtask')}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}</div>))}
+                        {!isReadOnly && <input type="text" value={newSubtaskText} onChange={(e) => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder={t('modals.addSubtask')} className="w-full bg-transparent p-2 focus:outline-none placeholder-text-secondary" />}
                     </div>
                 </div>
 
                 <div>
-                    <h3 className="text-sm font-semibold text-text-secondary mb-2">Dependencias</h3>
+                    <h3 className="text-sm font-semibold text-text-secondary mb-2">{t('modals.dependencies')}</h3>
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="text-xs font-semibold text-text-secondary uppercase">Depende de</label>
-                                {!isReadOnly && (<div className="relative" ref={dependencyPickerRef}><button onClick={() => setIsDependencyPickerOpen(p => !p)} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 flex items-center gap-1">+ Añadir</button>{isDependencyPickerOpen && (<div className="absolute right-0 mt-2 w-72 bg-secondary rounded-lg shadow-lg border border-border z-10 p-2 max-h-60 overflow-y-auto">{availableTasksForDependency.length > 0 ? availableTasksForDependency.map(depTask => (<button key={depTask.id} onClick={() => handleAddDependency(depTask.id)} className="w-full text-left p-2 hover:bg-secondary-focus rounded-md text-sm truncate">{depTask.title}</button>)) : <div className="p-2 text-sm text-text-secondary text-center italic">No hay tareas disponibles</div>}</div>)}</div>)}
+                                <label className="text-xs font-semibold text-text-secondary uppercase">{t('modals.dependsOn')}</label>
+                                {!isReadOnly && (<div className="relative" ref={dependencyPickerRef}><button onClick={() => setIsDependencyPickerOpen(p => !p)} className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full hover:bg-primary/30 flex items-center gap-1">{t('common.add')}</button>{isDependencyPickerOpen && (<div className="absolute right-0 mt-2 w-72 bg-secondary rounded-lg shadow-lg border border-border z-10 p-2 max-h-60 overflow-y-auto">{availableTasksForDependency.length > 0 ? availableTasksForDependency.map(depTask => (<button key={depTask.id} onClick={() => handleAddDependency(depTask.id)} className="w-full text-left p-2 hover:bg-secondary-focus rounded-md text-sm truncate">{depTask.title}</button>)) : <div className="p-2 text-sm text-text-secondary text-center italic">{t('modals.noAvailableTasks')}</div>}</div>)}</div>)}
                             </div>
-                            <div className="space-y-2">{dependencies.map(dep => (<div key={dep.id} className="flex items-center justify-between bg-secondary p-2 rounded-md text-sm"><div className="flex items-center gap-2 truncate"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${dep.status === Status.Done ? 'bg-status-done/20 text-status-done' : 'bg-status-inprogress/20 text-status-inprogress'}`}>{dep.status}</span><span className="truncate">{dep.title}</span></div>{!isReadOnly && (<button onClick={() => handleRemoveDependency(dep.id)} className="p-1 text-text-secondary hover:text-red-400 rounded-full flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>)}</div>))}{dependencies.length === 0 && <p className="text-xs text-text-secondary italic px-2">Esta tarea no tiene dependencias.</p>}</div>
+                            <div className="space-y-2">{dependencies.map(dep => (<div key={dep.id} className="flex items-center justify-between bg-secondary p-2 rounded-md text-sm"><div className="flex items-center gap-2 truncate"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${dep.status === Status.Done ? 'bg-status-done/20 text-status-done' : 'bg-status-inprogress/20 text-status-inprogress'}`}>{dep.status}</span><span className="truncate">{dep.title}</span></div>{!isReadOnly && (<button onClick={() => handleRemoveDependency(dep.id)} className="p-1 text-text-secondary hover:text-red-400 rounded-full flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>)}</div>))}{dependencies.length === 0 && <p className="text-xs text-text-secondary italic px-2">{t('modals.noDependencies')}</p>}</div>
                         </div>
-                        <div><label className="text-xs font-semibold text-text-secondary uppercase">Bloqueando</label><div className="space-y-2 mt-1">{blockingTasks.map(dep => (<div key={dep.id} className="flex items-center justify-between bg-secondary p-2 rounded-md text-sm"><div className="flex items-center gap-2 truncate"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${dep.status === Status.Done ? 'bg-status-done/20 text-status-done' : 'bg-status-inprogress/20 text-status-inprogress'}`}>{dep.status}</span><span className="truncate">{dep.title}</span></div></div>))}{blockingTasks.length === 0 && <p className="text-xs text-text-secondary italic px-2">Esta tarea no está bloqueando ninguna otra tarea.</p>}</div></div>
+                        <div><label className="text-xs font-semibold text-text-secondary uppercase">{t('modals.blocking')}</label><div className="space-y-2 mt-1">{blockingTasks.map(dep => (<div key={dep.id} className="flex items-center justify-between bg-secondary p-2 rounded-md text-sm"><div className="flex items-center gap-2 truncate"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${dep.status === Status.Done ? 'bg-status-done/20 text-status-done' : 'bg-status-inprogress/20 text-status-inprogress'}`}>{dep.status}</span><span className="truncate">{dep.title}</span></div></div>))}{blockingTasks.length === 0 && <p className="text-xs text-text-secondary italic px-2">{t('modals.noBlocking')}</p>}</div></div>
                     </div>
                 </div>
 
                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-text-secondary">Comentarios</h3>
+                    <h3 className="text-sm font-semibold text-text-secondary">{t('modals.comments')}</h3>
                     <div className="space-y-4 max-h-60 overflow-y-auto pr-2">{commentTree.map(comment => (<CommentComponent key={comment.id} comment={comment} />))}<div ref={commentsEndRef} /></div>
-                    {!isReadOnly && !replyingTo && <CommentInput onAddComment={handleAddComment} currentUser={currentUser} />}
+                    {!isReadOnly && !replyingTo && <CommentInput onAddComment={handleAddComment} />}
                 </div>
             </div>
 
             <div className="md:col-span-1 space-y-4">
-                <div title={isBlocked ? "Las dependencias deben completarse primero" : ""}><label htmlFor="status" className="text-sm font-semibold text-text-secondary">Estado</label><select id="status" name="status" value={editedTask.status} onChange={handleInputChange} disabled={isReadOnly || isBlocked} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed">{Object.values(Status).map(s => <option key={s} value={s}>{statusText[s]}</option>)}</select></div>
-                <div><label htmlFor="listId" className="text-sm font-semibold text-text-secondary">Proyecto</label><select id="listId" name="listId" value={editedTask.listId} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary">{allLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
-                <div><label htmlFor="assigneeId" className="text-sm font-semibold text-text-secondary">Asignado</label><select id="assigneeId" name="assigneeId" value={editedTask.assigneeId || ''} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"><option value="">Sin asignar</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-                <div><label htmlFor="priority" className="text-sm font-semibold text-text-secondary">Prioridad</label><select id="priority" name="priority" value={editedTask.priority} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary">{Object.values(Priority).map(p => <option key={p} value={p}>{p === Priority.Low ? 'Baja' : p === Priority.Medium ? 'Media' : 'Alta'}</option>)}</select></div>
-                <div><label htmlFor="dueDate" className="text-sm font-semibold text-text-secondary">Fecha de Vencimiento</label><input type="date" id="dueDate" name="dueDate" value={editedTask.dueDate} onChange={handleInputChange} readOnly={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" /></div>
-                <div><label htmlFor="reminder" className="text-sm font-semibold text-text-secondary">Recordatorio</label><select id="reminder" name="reminder" value={editedTask.reminder || 'No reminder'} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"><option value="No reminder">Sin recordatorio</option><option value="En la fecha de vencimiento">En la fecha de vencimiento</option><option value="1 día antes">1 día antes</option><option value="2 días antes">2 días antes</option><option value="1 semana antes">1 semana antes</option></select></div>
-                {editedTask.createdAt && (<div><label className="text-sm font-semibold text-text-secondary">Creado el</label><p className="mt-1 p-2 text-text-secondary bg-secondary rounded-md border border-border text-sm">{new Date(editedTask.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' })}</p></div>)}
+                <div title={isBlocked ? "Las dependencias deben completarse primero" : ""}><label htmlFor="status" className="text-sm font-semibold text-text-secondary">{t('modals.status')}</label><select id="status" name="status" value={editedTask.status} onChange={handleInputChange} disabled={isReadOnly || isBlocked} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed">{Object.values(Status).map(s => <option key={s} value={s}>{statusText[s]}</option>)}</select></div>
+                <div><label htmlFor="listId" className="text-sm font-semibold text-text-secondary">{t('sidebar.projects')}</label><select id="listId" name="listId" value={editedTask.listId} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary">{allLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
+                <div><label htmlFor="assigneeId" className="text-sm font-semibold text-text-secondary">{t('modals.assignee')}</label><select id="assigneeId" name="assigneeId" value={editedTask.assigneeId || ''} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"><option value="">{t('common.unassigned')}</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+                <div><label htmlFor="priority" className="text-sm font-semibold text-text-secondary">{t('modals.priority')}</label><select id="priority" name="priority" value={editedTask.priority} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary">{Object.values(Priority).map(p => <option key={p} value={p}>{t(`common.${p.toLowerCase()}`)}</option>)}</select></div>
+                <div><label htmlFor="dueDate" className="text-sm font-semibold text-text-secondary">{t('modals.dueDate')}</label><input type="date" id="dueDate" name="dueDate" value={editedTask.dueDate} onChange={handleInputChange} readOnly={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" /></div>
+                <div><label htmlFor="reminder" className="text-sm font-semibold text-text-secondary">{t('modals.reminder')}</label><select id="reminder" name="reminder" value={editedTask.reminder || 'No reminder'} onChange={handleInputChange} disabled={isReadOnly} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"><option value="No reminder">{t('modals.noReminder')}</option><option value="En la fecha de vencimiento">{t('modals.onDueDate')}</option><option value="1 día antes">{t('modals.oneDayBefore')}</option><option value="2 días antes">{t('modals.twoDaysBefore')}</option><option value="1 semana antes">{t('modals.oneWeekBefore')}</option></select></div>
+                {/* Fix: Complete the toLocaleString options object and add closing tags and export */}
+                {editedTask.createdAt && (<div><label className="text-sm font-semibold text-text-secondary">{t('modals.createdAt')}</label><p className="mt-1 p-2 text-text-secondary bg-secondary rounded-md border border-border text-sm">{new Date(editedTask.createdAt).toLocaleString(i18n.language, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p></div>)}
             </div>
         </main>
-
-        <footer className="p-6 border-t border-border flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4 bg-secondary/50">
-            <div className="flex items-center gap-4 text-xs">
-                {!isReadOnly && (
-                    <>
-                        <button onClick={handleDelete} className="px-4 py-2 bg-red-600/20 text-red-400 font-semibold rounded-lg hover:bg-red-600/30 hover:text-red-300 transition-colors duration-200">Eliminar Tarea</button>
-                        <button onClick={handleSaveTemplate} className="px-4 py-2 bg-primary/20 text-primary font-semibold rounded-lg hover:bg-primary/30 transition-colors duration-200">Guardar como Plantilla</button>
-                    </>
-                )}
-                {task.createdAt && <p className="text-text-secondary" title={new Date(task.createdAt).toLocaleString()}>{`Creado ${timeAgo(task.createdAt)}`}</p>}
+        <footer className="p-6 border-t border-border flex justify-between items-center">
+            <div>
+                {!isReadOnly && <button onClick={handleSaveTemplateClick} className="px-3 py-1.5 text-xs bg-secondary-focus text-text-secondary rounded-lg hover:bg-border">{t('modals.saveAsTemplate')}</button>}
             </div>
-            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                <button onClick={onClose} className="px-4 py-2 bg-secondary text-text-primary font-semibold rounded-lg hover:bg-secondary-focus transition-colors duration-200">Cancelar</button>
-                {!isReadOnly && (<button onClick={handleSaveChanges} className="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">Guardar y Cerrar</button>)}
+            <div className="flex gap-4">
+                {!isReadOnly && <button onClick={handleDelete} className="px-4 py-2 bg-red-500/10 text-red-400 font-semibold rounded-lg hover:bg-red-500/20">{t('modals.deleteTask')}</button>}
+                {!isReadOnly && <button onClick={handleSaveChanges} className="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus">{t('modals.saveAndClose')}</button>}
             </div>
         </footer>
       </div>

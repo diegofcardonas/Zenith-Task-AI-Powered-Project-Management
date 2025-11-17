@@ -1,6 +1,7 @@
 import React from 'react';
 import { Task, User, Status, Priority } from '../../types';
 import AvatarWithStatus from '../AvatarWithStatus';
+import { useTranslation } from '../../i18n';
 
 interface UserTasksModalProps {
   isOpen: boolean;
@@ -16,12 +17,6 @@ const statusConfig: { [key in Status]: string } = {
   [Status.Done]: 'bg-status-done/20 text-status-done',
 };
 
-const statusText: { [key in Status]: string } = {
-    [Status.Todo]: 'Por Hacer',
-    [Status.InProgress]: 'En Progreso',
-    [Status.Done]: 'Hecho',
-};
-
 const priorityConfig: { [key in Priority]: string } = {
     [Priority.High]: 'text-priority-high',
     [Priority.Medium]: 'text-priority-medium',
@@ -29,7 +24,14 @@ const priorityConfig: { [key in Priority]: string } = {
 };
 
 const UserTasksModal: React.FC<UserTasksModalProps> = ({ isOpen, onClose, user, tasks, onSelectTask }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
+  
+  const statusText: { [key in Status]: string } = {
+    [Status.Todo]: t('common.todo'),
+    [Status.InProgress]: t('common.inProgress'),
+    [Status.Done]: t('common.done'),
+  };
 
   return (
     <div
@@ -46,11 +48,11 @@ const UserTasksModal: React.FC<UserTasksModalProps> = ({ isOpen, onClose, user, 
           <div className="flex items-center gap-4">
             <AvatarWithStatus user={user} className="w-12 h-12" />
             <div>
-              <h2 className="text-2xl font-bold text-text-primary">{`Tareas de ${user.name}`}</h2>
+              <h2 className="text-2xl font-bold text-text-primary">{t('modals.userTasksTitle', { name: user.name })}</h2>
               <p className="text-text-secondary">{user.title}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -71,11 +73,11 @@ const UserTasksModal: React.FC<UserTasksModalProps> = ({ isOpen, onClose, user, 
                         <div>
                             <p className="font-semibold text-text-primary">{task.title}</p>
                             <p className={`text-sm ${isOverdue ? 'text-priority-high font-semibold' : 'text-text-secondary'}`}>
-                                Vence el: {new Date(task.dueDate).toLocaleDateString()}
+                                {t('modals.dueDate')}: {new Date(task.dueDate).toLocaleDateString()}
                             </p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className={`text-xs font-semibold ${priorityConfig[task.priority]}`}>{task.priority}</span>
+                            <span className={`text-xs font-semibold ${priorityConfig[task.priority]}`}>{t(`common.${task.priority.toLowerCase()}`)}</span>
                             <span className={`text-xs font-medium rounded-full px-3 py-1 text-center ${statusConfig[task.status]}`}>
                                 {statusText[task.status]}
                             </span>
@@ -86,14 +88,14 @@ const UserTasksModal: React.FC<UserTasksModalProps> = ({ isOpen, onClose, user, 
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-text-secondary italic">
-              No hay tareas para mostrar con el filtro actual.
+              {t('admin.noTasksWithFilter')}
             </div>
           )}
         </main>
         
         <footer className="p-4 border-t border-border flex justify-end">
             <button onClick={onClose} className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">
-                Cerrar
+                {t('common.close')}
             </button>
         </footer>
       </div>

@@ -297,9 +297,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [state, dispatch] = useReducer(appReducer, initialState);
     const { t, i18n } = useTranslation();
 
-    useEffect(() => {
-        setTimeout(() => dispatch({ type: 'SET_STATE', payload: { isLoading: false } }), 1500);
+    const checkAuth = useCallback(() => {
+        const authedUserId = localStorage.getItem('authedUserId');
+        if (authedUserId) {
+            const user = USERS.find(u => u.id === authedUserId);
+            if (user) {
+                dispatch({ type: 'SET_STATE', payload: { currentUser: user } });
+            }
+        }
+        dispatch({ type: 'SET_STATE', payload: { isLoading: false } });
     }, []);
+    
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -345,7 +356,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, []);
     
     const simpleSetters = useMemo(() => ({
-        setCurrentUser: (user: User | null) => dispatch({ type: 'SET_STATE', payload: { currentUser: user } }),
         setSelectedTaskId: (taskId: string | null) => dispatch({ type: 'SET_STATE', payload: { selectedTaskId: taskId } }),
         setSelectedListId: (listId: string | null) => dispatch({ type: 'SET_STATE', payload: { selectedListId: listId } }),
         setSelectedWorkspaceId: (workspaceId: string) => dispatch({ type: 'SET_STATE', payload: { selectedWorkspaceId: workspaceId } }),
@@ -370,6 +380,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setColorScheme: (scheme: ColorScheme) => dispatch({ type: 'SET_STATE', payload: { colorScheme: scheme } }),
         hideConfirmation,
     }), [hideConfirmation]);
+
+    const handleLogin = useCallback((email: string, password_unused: string) => {
+        // NOTE: Password is not checked for this mock implementation
+        const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        if (user) {
+            localStorage.setItem('authedUserId', user.id);
+            dispatch({ type: 'SET_STATE', payload: { currentUser: user } });
+        } else {
+            addToast({ message: t('toasts.loginFailed'), type: 'error' });
+        }
+    }, [state.users, addToast, t]);
+    
+    const handleSignup = useCallback((name: string, email: string, password_unused: string) => {
+        const userExists = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        if (userExists) {
+            addToast({ message: t('toasts.signupFailed'), type: 'error' });
+            return;
+        }
+        const newUser: User = {
+            id: `u-${Date.now()}`, name, role: Role.Member, // New users are members by default
+            avatar: `https://i.pravatar.cc/150?u=${Date.now()}`, title: 'Team Member',
+            email: email, team: 'Core', bio: '', status: UserStatus.Online,
+        };
+        dispatch({ type: 'ADD_USER', payload: newUser });
+        localStorage.setItem('authedUserId', newUser.id);
+        dispatch({ type: 'SET_STATE', payload: { currentUser: newUser } });
+        addToast({ message: t('toasts.signupSuccess'), type: 'success' });
+    }, [state.users, addToast, t]);
+
+    const handleLogout = useCallback(() => {
+        localStorage.removeItem('authedUserId');
+        dispatch({ type: 'SET_STATE', payload: { currentUser: null } });
+    }, []);
 
     const setNotifications = useCallback((notifications: React.SetStateAction<Notification[]>) => {
         const newNotifications = typeof notifications === 'function' ? notifications(state.notifications) : notifications;
@@ -611,14 +654,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (projectName) {
                     const foundList = state.lists.find(l => l.name.toLowerCase() === projectName.toLowerCase());
                     if (foundList) listIdToUse = foundList.id;
-                    else addToast({ message: t('toasts.projectNotFound', { name: projectName }), type: 'info' });
+                    // FIX: Explicitly cast 'projectName' from 'args' to string for type safety in translation.
+                    else addToast({ message: t('toasts.projectNotFound', { name: String(projectName) }), type: 'info' });
                 }
                 if (!listIdToUse) { addToast({ message: t('toasts.selectProjectFirst'), type: 'info' }); return; }
                 let assigneeIdToUse = null;
                 if (assigneeName) {
                     const foundUser = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
                     if (foundUser) assigneeIdToUse = foundUser.id;
-// Fix: Explicitly cast 'assigneeName' to string to match the type expected by the translation function.
+                    // FIX: Explicitly cast 'assigneeName' from 'args' to string for type safety in translation.
                     else addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'info' });
                 }
                 const newTask: Task = {
@@ -637,7 +681,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (taskToUpdate && Object.values(Status).includes(status)) {
                     dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, status } });
                     addToast({ message: t('toasts.taskStatusUpdated', { title: taskToUpdate.title, status: i18n.t(`common.${status.replace(/\s+/g, '').toLowerCase()}`) }), type: 'success' });
-                } else { addToast({ message: t('toasts.taskNotFound', { title: taskTitle }), type: 'error' }); }
+                } else {
+// FIX: Explicitly cast 'taskTitle' from 'args' to string for type safety in translation.
+addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
+}
                 break;
             }
             case 'assign_task': {
@@ -647,8 +694,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (taskToUpdate && userToAssign) {
                     dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, assigneeId: userToAssign.id } });
                     addToast({ message: t('toasts.taskAssigned', { title: taskToUpdate.title, name: userToAssign.name }), type: 'success' });
-                } else if (!taskToUpdate) { addToast({ message: t('toasts.taskNotFound', { title: taskTitle }), type: 'error' });
-                } else { addToast({ message: t('toasts.userNotFound', { name: assigneeName }), type: 'error' }); }
+                } else if (!taskToUpdate) {
+// FIX: Explicitly cast 'taskTitle' from 'args' to string for type safety in translation.
+addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
+                } else {
+// FIX: Explicitly cast 'assigneeName' from 'args' to string for type safety in translation.
+addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'error' });
+}
                 break;
             }
             default: console.warn(`Unknown AI action: ${name}`);
@@ -657,6 +709,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const actions = useMemo(() => ({
         ...simpleSetters,
+        handleLogin,
+        handleSignup,
+        handleLogout,
         setNotifications,
         addToast,
         removeToast,
@@ -688,7 +743,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleUpdateUserRole,
         handleAIAction,
     }), [
-        simpleSetters, setNotifications, addToast, removeToast, addNotification, showConfirmation, handleUpdateUser, handleSaveWorkspace,
+        simpleSetters, handleLogin, handleSignup, handleLogout, setNotifications, addToast, removeToast, addNotification, showConfirmation, handleUpdateUser, handleSaveWorkspace,
         handleDeleteWorkspace, handleSaveList, handleDeleteList, handleSaveFolder, handleDeleteFolder, handleUpdateTask,
         handleDeleteTask, handleBulkDeleteTasks, handleAddTask, handleAddTaskOnDate, logActivity, handleGenerateSummary, handleSidebarReorder,
         handleTasksReorder, handleBulkUpdateTasks, handleSelectWorkspace, handleUpdateUserStatus, handleSaveTemplate,

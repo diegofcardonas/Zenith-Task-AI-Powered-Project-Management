@@ -254,7 +254,10 @@ const es = {
     "taskCreatedByAI": "Tarea \"{{title}}\" creada por IA.",
     "taskStatusUpdated": "Estado de \"{{title}}\" actualizado a {{status}}.",
     "taskAssigned": "Tarea \"{{title}}\" asignada a {{name}}.",
-    "taskNotFound": "Tarea \"{{title}}\" no encontrada."
+    "taskNotFound": "Tarea \"{{title}}\" no encontrada.",
+    "loginFailed": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
+    "signupFailed": "El correo electrónico ya está en uso. Por favor, inicia sesión.",
+    "signupSuccess": "¡Registro exitoso! Bienvenido."
   },
   "gantt": {
     "taskName": "Nombre de la Tarea"
@@ -375,6 +378,17 @@ const es = {
     "riskAnalysisNoTasks": "No hay tareas para analizar riesgos.",
     "riskAnalysisError": "Lo siento, no pude generar un análisis de riesgos.",
     "connectionError": "Lo siento, estoy teniendo problemas para conectarme en este momento."
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "fullName": "Nombre Completo",
+    "loginToAccount": "Inicia sesión en tu cuenta",
+    "createAnAccount": "Crea una cuenta nueva",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?"
   }
 };
 const en = {
@@ -631,7 +645,10 @@ const en = {
     "taskCreatedByAI": "Task \"{{title}}\" created by AI.",
     "taskStatusUpdated": "Status of \"{{title}}\" updated to {{status}}.",
     "taskAssigned": "Task \"{{title}}\" assigned to {{name}}.",
-    "taskNotFound": "Task \"{{title}}\" not found."
+    "taskNotFound": "Task \"{{title}}\" not found.",
+    "loginFailed": "Invalid credentials. Please try again.",
+    "signupFailed": "Email is already in use. Please log in.",
+    "signupSuccess": "Signup successful! Welcome."
   },
   "gantt": {
     "taskName": "Task Name"
@@ -752,6 +769,17 @@ const en = {
     "riskAnalysisNoTasks": "There are no tasks to analyze for risks.",
     "riskAnalysisError": "Sorry, I couldn't generate a risk analysis.",
     "connectionError": "Sorry, I'm having trouble connecting right now."
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "fullName": "Full Name",
+    "loginToAccount": "Login to your account",
+    "createAnAccount": "Create a new account",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?"
   }
 };
 

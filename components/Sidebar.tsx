@@ -118,7 +118,7 @@ const Sidebar: React.FC = () => {
         setIsFolderModalOpen,
         setFolderToEdit,
         setEditingUserId,
-        setCurrentUser,
+        handleLogout,
         setIsSettingsModalOpen,
         handleUpdateUserStatus,
         handleSidebarReorder,
@@ -145,11 +145,11 @@ const Sidebar: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
+    const performLogout = () => {
         showConfirmation(
             t('sidebar.logout'),
             t('confirmations.logout'),
-            () => setCurrentUser(null)
+            () => handleLogout()
         );
     };
 
@@ -418,7 +418,7 @@ const Sidebar: React.FC = () => {
                             <UserPanel
                                 currentUser={currentUser}
                                 onOpenUserProfile={() => setEditingUserId(currentUser.id)}
-                                onLogout={handleLogout}
+                                onLogout={performLogout}
                                 onClose={() => setIsUserPanelOpen(false)}
                                 onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
                             />

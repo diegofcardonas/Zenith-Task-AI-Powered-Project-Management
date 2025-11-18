@@ -8,7 +8,7 @@ import AppAdminPanel from './components/admin/AppAdminPanel';
 import WorkspaceModal from './components/WorkspaceModal';
 import ProjectModal from './components/ProjectModal';
 import BlockingTasksModal from './components/BlockingTasksModal';
-import UserSelectionPage from './components/UserSelectionPage';
+import AuthPage from './components/AuthPage';
 import MyTasksView from './components/MyTasksView';
 import CommandPalette from './components/CommandPalette';
 import AISummaryModal from './components/AISummaryModal';
@@ -96,9 +96,9 @@ const App: React.FC = () => {
   } = state;
 
   const {
-    setCurrentUser,
     removeToast,
     hideConfirmation,
+    handleLogout,
   } = actions;
 
   useEffect(() => {
@@ -163,7 +163,7 @@ const App: React.FC = () => {
               actions.showConfirmation(
                 'Cerrar Sesión', 
                 '¿Estás seguro de que quieres cerrar sesión?', 
-                () => actions.setCurrentUser(null)
+                () => handleLogout()
               );
               break;
       }
@@ -175,7 +175,7 @@ const App: React.FC = () => {
   }
 
   if (!currentUser) {
-      return <UserSelectionPage users={users} onSelectUser={(userId) => setCurrentUser(users.find(u => u.id === userId) || null)} />;
+      return <AuthPage />;
   }
 
   return (

@@ -77,6 +77,9 @@ const es = {
     "editProject": "Editar Proyecto",
     "deleteProject": "Eliminar Proyecto"
   },
+  "footer": {
+    "copyright": "© {{year}} Zenith Task. Todos los derechos reservados."
+  },
   "mainContent": {
     "board": "Tablero",
     "list": "Lista",
@@ -469,6 +472,9 @@ const en = {
     "aiSummary": "AI Summary",
     "editProject": "Edit Project",
     "deleteProject": "Delete Project"
+  },
+  "footer": {
+    "copyright": "© {{year}} Zenith Task. All rights reserved."
   },
   "mainContent": {
     "board": "Board",

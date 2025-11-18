@@ -174,65 +174,74 @@ const App: React.FC = () => {
       actions.setIsCommandPaletteOpen(false);
   };
 
-  if (isLoading) {
-      return <WelcomePage />;
-  }
+  const renderContent = () => {
+    if (isLoading) {
+        return <WelcomePage />;
+    }
 
-  if (!currentUser) {
-      return <AuthPage />;
-  }
+    if (!currentUser) {
+        return <AuthPage />;
+    }
+
+    return (
+      <div className="flex h-screen bg-background text-text-primary">
+        <Sidebar />
+        
+        {activeView === 'dashboard' && permissions.has(Permission.VIEW_DASHBOARD) ? (
+          <AdminDashboard />
+        ) : activeView === 'app_admin' && permissions.has(Permission.MANAGE_APP) ? (
+          <AppAdminPanel />
+        ) : activeView === 'my_tasks' ? (
+          <MyTasksView />
+        ) : (
+          <MainContent />
+        )}
+
+        {selectedTask && <TaskModal />}
+        {editingUser && <UserProfileModal user={editingUser} onClose={() => actions.setEditingUserId(null)} onUpdateUser={actions.handleUpdateUser} isEditingSelf={editingUser.id === currentUser.id} />}
+        <WorkspaceModal isOpen={isWorkspaceModalOpen} workspaceToEdit={workspaceToEdit} onClose={() => actions.setIsWorkspaceModalOpen(false)} onSave={actions.handleSaveWorkspace} />
+        <ProjectModal isOpen={isProjectModalOpen} listToEdit={listToEdit} onClose={() => actions.setIsProjectModalOpen(false)} onSave={actions.handleSaveList} folders={folders} workspaceId={selectedWorkspaceId!} />
+        <FolderModal isOpen={isFolderModalOpen} folderToEdit={folderToEdit} onClose={() => actions.setIsFolderModalOpen(false)} onSave={actions.handleSaveFolder} />
+        {taskForBlockingModal && (
+            <BlockingTasksModal
+              isOpen={isBlockingTasksModalOpen}
+              task={taskForBlockingModal}
+            />
+        )}
+         <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => actions.setIsCommandPaletteOpen(false)} lists={lists} currentUser={currentUser} onCommand={handleCommand} />
+        <AISummaryModal
+          isOpen={isSummaryModalOpen}
+          onClose={() => actions.setIsSummaryModalOpen(false)}
+          title={summaryData.title}
+          content={summaryData.content}
+          isLoading={isSummaryLoading}
+        />
+        <SettingsModal isOpen={isSettingsModalOpen} onClose={() => actions.setIsSettingsModalOpen(false)} theme={theme} setTheme={actions.setTheme} colorScheme={colorScheme} setColorScheme={actions.setColorScheme} />
+        {isConfirmationModalOpen && confirmationModalProps && (
+          <ConfirmationModal
+              isOpen={isConfirmationModalOpen}
+              onClose={hideConfirmation}
+              onConfirm={confirmationModalProps.onConfirm}
+              title={confirmationModalProps.title}
+              message={confirmationModalProps.message}
+          />
+        )}
+        <AIChatbot tasks={tasks} lists={lists} users={users} />
+      </div>
+    );
+  };
 
   return (
-    <div className="flex h-screen bg-background text-text-primary">
-      <Sidebar />
-      
-      {activeView === 'dashboard' && permissions.has(Permission.VIEW_DASHBOARD) ? (
-        <AdminDashboard />
-      ) : activeView === 'app_admin' && permissions.has(Permission.MANAGE_APP) ? (
-        <AppAdminPanel />
-      ) : activeView === 'my_tasks' ? (
-        <MyTasksView />
-      ) : (
-        <MainContent />
-      )}
-
-      {selectedTask && <TaskModal />}
-      {editingUser && <UserProfileModal user={editingUser} onClose={() => actions.setEditingUserId(null)} onUpdateUser={actions.handleUpdateUser} isEditingSelf={editingUser.id === currentUser.id} />}
-      <WorkspaceModal isOpen={isWorkspaceModalOpen} workspaceToEdit={workspaceToEdit} onClose={() => actions.setIsWorkspaceModalOpen(false)} onSave={actions.handleSaveWorkspace} />
-      <ProjectModal isOpen={isProjectModalOpen} listToEdit={listToEdit} onClose={() => actions.setIsProjectModalOpen(false)} onSave={actions.handleSaveList} folders={folders} workspaceId={selectedWorkspaceId!} />
-      <FolderModal isOpen={isFolderModalOpen} folderToEdit={folderToEdit} onClose={() => actions.setIsFolderModalOpen(false)} onSave={actions.handleSaveFolder} />
-      {taskForBlockingModal && (
-          <BlockingTasksModal
-            isOpen={isBlockingTasksModalOpen}
-            task={taskForBlockingModal}
-          />
-      )}
-       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => actions.setIsCommandPaletteOpen(false)} lists={lists} currentUser={currentUser} onCommand={handleCommand} />
-      <AISummaryModal
-        isOpen={isSummaryModalOpen}
-        onClose={() => actions.setIsSummaryModalOpen(false)}
-        title={summaryData.title}
-        content={summaryData.content}
-        isLoading={isSummaryLoading}
-      />
-      <SettingsModal isOpen={isSettingsModalOpen} onClose={() => actions.setIsSettingsModalOpen(false)} theme={theme} setTheme={actions.setTheme} colorScheme={colorScheme} setColorScheme={actions.setColorScheme} />
-      {isConfirmationModalOpen && confirmationModalProps && (
-        <ConfirmationModal
-            isOpen={isConfirmationModalOpen}
-            onClose={hideConfirmation}
-            onConfirm={confirmationModalProps.onConfirm}
-            title={confirmationModalProps.title}
-            message={confirmationModalProps.message}
-        />
-      )}
-      <AIChatbot tasks={tasks} lists={lists} users={users} />
-
-      <div className="fixed top-5 right-5 z-50 space-y-2">
+    <>
+      {renderContent()}
+      <div className="fixed top-5 right-5 z-50 space-y-2 pointer-events-none">
         {toasts.map(toast => (
-          <ToastComponent key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+          <div key={toast.id} className="pointer-events-auto">
+             <ToastComponent toast={toast} onClose={() => removeToast(toast.id)} />
+          </div>
         ))}
       </div>
-    </div>
+    </>
   );
 };
 

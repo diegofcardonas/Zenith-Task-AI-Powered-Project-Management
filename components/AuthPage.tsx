@@ -92,6 +92,17 @@ const AuthPage: React.FC = () => {
               </button>
             </p>
           </div>
+          
+          {mode === 'login' && (
+              <div className="mt-8 pt-6 border-t border-border text-center">
+                  <p className="text-xs text-text-secondary mb-2 uppercase font-bold tracking-wider">Demo Accounts</p>
+                  <div className="text-xs space-y-1 text-text-secondary">
+                      <p><span className="font-semibold text-text-primary">Admin:</span> alex@example.com</p>
+                      <p><span className="font-semibold text-text-primary">Member:</span> sarah@example.com</p>
+                      <p><span className="font-semibold text-text-primary">Viewer:</span> mike@example.com</p>
+                  </div>
+              </div>
+          )}
         </div>
       </div>
     </div>

@@ -146,7 +146,7 @@ const MainContent: React.FC = () => {
                             title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                           </svg>
                           <span className="hidden sm:inline">{t('common.new')}</span>
                         </button>
@@ -185,6 +185,9 @@ const MainContent: React.FC = () => {
             </div>
         </div>
       )}
+      <footer className="p-4 text-center text-xs text-text-secondary border-t border-border mt-auto flex-shrink-0">
+          {t('footer.copyright', { year: new Date().getFullYear() })}
+      </footer>
     </main>
   );
 };

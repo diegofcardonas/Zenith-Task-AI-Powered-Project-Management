@@ -50,17 +50,17 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-end md:items-center z-50 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scaleIn"
+        className="bg-surface w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-xl shadow-2xl flex flex-col animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-text-primary">{isEditingSelf ? t('modals.editYourProfile') : t('modals.editProfileOf', { name: user.name })}</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-text-primary">{isEditingSelf ? t('modals.editYourProfile') : t('modals.editProfileOf', { name: user.name })}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -93,7 +93,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                 </div>
 
                 <div className="md:col-span-2 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="userName" className="text-sm font-semibold text-text-secondary">{t('modals.fullName')}</label>
                             <input id="userName" name="name" type="text" value={editedUser.name} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
@@ -103,7 +103,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                             <input id="userTitle" name="title" type="text" value={editedUser.title} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                         </div>
                     </div>
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="userEmail" className="text-sm font-semibold text-text-secondary">{t('modals.email')}</label>
                             <input id="userEmail" name="email" type="email" value={editedUser.email} onChange={handleInputChange} className="w-full mt-1 p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />

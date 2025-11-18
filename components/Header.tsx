@@ -116,12 +116,12 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <header className="flex-shrink-0 flex items-center justify-between p-4 sm:p-6 border-b border-border bg-surface/50 backdrop-blur-sm sticky top-0 z-10">
-            <div className="flex items-center gap-2 min-w-0">
-                <button onClick={onToggleSidebar} className="p-1 text-text-secondary hover:text-text-primary" aria-label={t('header.openSidebar')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <header className="flex-shrink-0 flex items-center justify-between p-3 sm:p-6 border-b border-border bg-surface/50 backdrop-blur-sm sticky top-0 z-10">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                <button onClick={onToggleSidebar} className="p-1 text-text-secondary hover:text-text-primary flex-shrink-0" aria-label={t('header.openSidebar')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
-                <h1 className="text-2xl font-bold text-text-primary truncate">{title}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-text-primary truncate">{title}</h1>
                 {selectedList && permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
                     <ProjectActionsMenu
                         list={selectedList}
@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                     />
                 )}
             </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-4 flex-shrink-0">
                 <GlobalSearch 
                     allTasks={allTasks}
                     allLists={allLists}
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
 
                 <button 
                     onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-                    className="flex-shrink-0 p-2 rounded-full hover:bg-secondary-focus text-text-secondary hover:text-text-primary transition-colors"
+                    className="flex-shrink-0 p-2 rounded-full hover:bg-secondary-focus text-text-secondary hover:text-text-primary transition-colors hidden sm:block"
                     aria-label={t('header.commandPaletteTitle')}
                     title={t('header.commandPaletteTitle')}
                 >
@@ -180,7 +180,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                       aria-label={t('header.openUserProfile')}
                   >
                       <span className="hidden sm:inline font-semibold text-text-primary">{currentUser.name}</span>
-                      <AvatarWithStatus user={currentUser} className="w-9 h-9" />
+                      <AvatarWithStatus user={currentUser} className="w-8 h-8 sm:w-9 sm:h-9" />
                   </button>
                 )}
             </div>

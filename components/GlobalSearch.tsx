@@ -24,6 +24,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const debouncedQuery = useDebounce(query, 300);
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -51,11 +52,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setIsFocused(false);
             }
         };
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setIsOpen(false);
+                setIsFocused(false);
             }
         };
 
@@ -96,22 +99,33 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ allTasks, allLists, allUser
 
     return (
         <div className="relative" ref={searchRef}>
-            <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-text-secondary absolute top-1/2 left-3 transform -translate-y-1/2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
+            <div className={`relative transition-all duration-300 ${isFocused ? 'w-48 sm:w-64' : 'w-10 sm:w-64'}`}>
+                <button 
+                    className={`absolute top-1/2 left-2 transform -translate-y-1/2 text-text-secondary z-10 ${isFocused ? 'pointer-events-none' : ''}`}
+                    onClick={() => {
+                         setIsFocused(true);
+                         inputRef.current?.focus();
+                    }}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                </button>
                 <input
                     ref={inputRef}
                     type="text"
-                    placeholder={t('header.searchPlaceholder')}
+                    placeholder={isFocused ? t('header.searchPlaceholder') : ''}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => query.length > 1 && setIsOpen(true)}
-                    className="bg-secondary pl-10 pr-4 py-2 rounded-lg w-48 sm:w-64 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    onFocus={() => {
+                        setIsFocused(true);
+                        if(query.length > 1) setIsOpen(true);
+                    }}
+                    className={`bg-secondary py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all h-9 ${isFocused ? 'pl-9 pr-4 w-full' : 'w-9 sm:pl-9 sm:w-full cursor-pointer pl-9 bg-transparent sm:bg-secondary'}`}
                 />
             </div>
             {isOpen && (
-                <div className="absolute top-full mt-2 w-80 bg-surface rounded-lg shadow-lg border border-border z-30 animate-fadeIn">
+                <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 w-72 sm:w-80 bg-surface rounded-lg shadow-lg border border-border z-30 animate-fadeIn">
                     {hasResults ? (
                         <div className="max-h-96 overflow-y-auto">
                             {results.tasks.length > 0 && (

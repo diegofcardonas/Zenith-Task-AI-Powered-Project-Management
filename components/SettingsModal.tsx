@@ -18,13 +18,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-end md:items-center z-50 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-surface rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-scaleIn"
+        className="bg-surface w-full h-full md:h-auto md:max-h-[90vh] md:max-w-md md:rounded-xl shadow-2xl flex flex-col animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-6 border-b border-border flex justify-between items-center">

@@ -68,23 +68,30 @@ const BoardView: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 h-full">
+    <div className="flex flex-nowrap overflow-x-auto md:grid md:grid-cols-3 gap-4 lg:gap-6 h-full snap-x snap-mandatory pb-4 md:pb-0">
       {columns.map(({ status, tasks: columnTasks }) => (
         <div
           key={status}
-          className={`bg-surface rounded-lg flex flex-col transition-colors duration-200 ${dragOverStatus === status ? 'bg-secondary-focus' : ''}`}
+          className={`
+            flex-shrink-0 w-[85vw] md:w-auto snap-center h-full
+            bg-surface rounded-lg flex flex-col transition-colors duration-200 
+            border border-border md:border-none
+            ${dragOverStatus === status ? 'bg-secondary-focus' : ''}
+          `}
           onDragOver={(e) => handleDragOver(e, status)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, status)}
         >
-          <div className="p-4 border-b border-border sticky top-0 bg-surface rounded-t-lg">
-            <h3 className="font-semibold text-lg flex items-center">
-              <span className={`w-3 h-3 rounded-full mr-3 ${STATUS_CONFIG[status].color}`}></span>
-              {STATUS_CONFIG[status].title}
+          <div className="p-4 border-b border-border sticky top-0 bg-surface rounded-t-lg z-10">
+            <h3 className="font-semibold text-lg flex items-center justify-between md:justify-start">
+              <div className="flex items-center">
+                <span className={`w-3 h-3 rounded-full mr-3 ${STATUS_CONFIG[status].color}`}></span>
+                {STATUS_CONFIG[status].title}
+              </div>
               <span className="ml-2 text-sm bg-secondary-focus text-text-secondary rounded-full px-2 py-0.5">{columnTasks.length}</span>
             </h3>
           </div>
-          <div className="p-2 sm:p-4 space-y-4 flex-grow overflow-y-auto">
+          <div className="p-2 sm:p-4 space-y-3 sm:space-y-4 flex-grow overflow-y-auto min-h-0">
             {columnTasks.length > 0 ? (
                 columnTasks.map((task, index) => (
                     <div key={task.id} style={{ animationDelay: `${index * 50}ms`}} className="animate-fadeIn">
@@ -101,13 +108,15 @@ const BoardView: React.FC = () => {
                     </div>
                 ))
             ) : (
-                <div className="flex items-center justify-center h-full text-text-secondary text-sm italic p-4">
+                <div className="flex items-center justify-center h-32 md:h-full text-text-secondary text-sm italic p-4 text-center">
                     {t('board.dropMessage')}
                 </div>
             )}
           </div>
         </div>
       ))}
+      {/* Spacer for mobile scroll to show last column properly if needed */}
+      <div className="w-4 flex-shrink-0 md:hidden"></div>
     </div>
   );
 };

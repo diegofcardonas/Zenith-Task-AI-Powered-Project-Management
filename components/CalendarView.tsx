@@ -111,10 +111,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask,
     const weekdays = [t('weekdays.sun'), t('weekdays.mon'), t('weekdays.tue'), t('weekdays.wed'), t('weekdays.thu'), t('weekdays.fri'), t('weekdays.sat')];
 
     return (
-        <div className="bg-surface rounded-lg h-full flex flex-col">
-            <header className="p-4 border-b border-border flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-sm border border-border rounded-md hover:bg-secondary-focus">{t('common.today')}</button>
+        <div className="bg-surface rounded-lg h-full flex flex-col overflow-hidden border border-border md:border-none">
+            <header className="p-3 md:p-4 border-b border-border flex justify-between items-center flex-wrap gap-2">
+                <div className="flex items-center gap-2 order-2 md:order-1">
+                    <button onClick={() => setCurrentDate(new Date())} className="px-2 py-1 md:px-3 text-xs md:text-sm border border-border rounded-md hover:bg-secondary-focus">{t('common.today')}</button>
                     <button onClick={goToPreviousMonth} className="p-1 rounded-full hover:bg-secondary-focus" aria-label={t('common.previous')}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </button>
@@ -122,44 +122,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask,
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                     </button>
                 </div>
-                <h2 className="text-xl font-semibold text-text-primary">
+                <h2 className="text-lg md:text-xl font-semibold text-text-primary order-1 md:order-2 w-full md:w-auto text-center md:text-left">
                     {currentDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
                 </h2>
-                <div></div>
+                <div className="hidden md:block order-3"></div>
             </header>
             <div className="grid grid-cols-7 flex-shrink-0">
                 {weekdays.map(day => (
-                    <div key={day} className="text-center p-2 text-xs font-semibold uppercase text-text-secondary border-b border-r border-border">{day}</div>
+                    <div key={day} className="text-center p-1 md:p-2 text-[10px] md:text-xs font-semibold uppercase text-text-secondary border-b border-r border-border truncate">{day}</div>
                 ))}
             </div>
             <div className="grid grid-cols-7 grid-rows-6 flex-grow overflow-y-auto">
                 {daysInMonth.map((day, index) => {
-                    if (!day) return <div key={`empty-${index}`} className="border-r border-b border-border"></div>;
+                    if (!day) return <div key={`empty-${index}`} className="border-r border-b border-border bg-secondary/10"></div>;
                     
                     const dateKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
                     const dayTasks = tasksByDate.get(dateKey) || [];
                     const isToday = isSameDay(day, today);
-                    const MAX_TASKS_VISIBLE = 2;
+                    const MAX_TASKS_VISIBLE = 2; // Keep low for mobile
 
                     return (
-                        <div key={index} className="border-r border-b border-border p-2 flex flex-col group relative">
+                        <div key={index} className="border-r border-b border-border p-1 md:p-2 flex flex-col group relative min-h-[80px]">
                             <div className="flex justify-between items-center">
-                                <span className={`text-sm font-semibold ${isToday ? 'bg-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{day.getDate()}</span>
+                                <span className={`text-xs md:text-sm font-semibold ${isToday ? 'bg-primary text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center' : ''}`}>{day.getDate()}</span>
                                 {canCreateTasks &&
-                                    <button onClick={() => onAddTaskForDate(day)} title={t('tooltips.addTaskForDate', { date: day.toLocaleDateString()})} className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-secondary-focus transition-opacity">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+                                    <button onClick={() => onAddTaskForDate(day)} title={t('tooltips.addTaskForDate', { date: day.toLocaleDateString()})} className="opacity-100 md:opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-secondary-focus transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                                     </button>
                                 }
                             </div>
-                            <div className="mt-2 space-y-1 overflow-y-auto">
+                            <div className="mt-1 md:mt-2 space-y-1 overflow-hidden">
                                 {dayTasks.slice(0, MAX_TASKS_VISIBLE).map(task => (
-                                    <button key={task.id} onClick={() => onSelectTask(task)} className="w-full text-left p-1 rounded bg-secondary hover:bg-secondary-focus text-xs flex items-center gap-1.5 truncate">
+                                    <button key={task.id} onClick={() => onSelectTask(task)} className="w-full text-left p-0.5 md:p-1 rounded bg-secondary hover:bg-secondary-focus text-[10px] md:text-xs flex items-center gap-1 truncate">
                                         <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[task.priority]}`}></div>
                                         <span className="truncate">{task.title}</span>
                                     </button>
                                 ))}
                                 {dayTasks.length > MAX_TASKS_VISIBLE && (
-                                    <button onClick={() => setModalData({day, tasks: dayTasks})} className="w-full text-left text-xs text-primary hover:underline">
+                                    <button onClick={() => setModalData({day, tasks: dayTasks})} className="w-full text-left text-[10px] md:text-xs text-primary hover:underline pl-1">
                                         {t('common.more', { count: dayTasks.length - MAX_TASKS_VISIBLE })}
                                     </button>
                                 )}

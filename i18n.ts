@@ -264,7 +264,9 @@ const es = {
     "signupSuccess": "¡Registro exitoso! Bienvenido."
   },
   "gantt": {
-    "taskName": "Nombre de la Tarea"
+    "taskName": "Nombre de la Tarea",
+    "showList": "Ver Lista",
+    "showChart": "Ver Gráfico"
   },
   "admin": {
     "totalTasks": "Tareas Totales",
@@ -559,7 +561,7 @@ const en = {
     "attachments": "Attachments",
     "attachFile": "+ Attach File",
     "subtasks": "Subtasks",
-    "subtasksCompleted": "Subtasks ({{completed}}/{{total}})",
+    "subtasksCompleted": "Subtareas ({{completed}}/{{total}})",
     "addSubtask": "+ Add a subtask",
     "dependencies": "Dependencies",
     "dependsOn": "Depends on",
@@ -660,7 +662,9 @@ const en = {
     "signupSuccess": "Signup successful! Welcome."
   },
   "gantt": {
-    "taskName": "Task Name"
+    "taskName": "Task Name",
+    "showList": "Show List",
+    "showChart": "Show Chart"
   },
   "admin": {
     "totalTasks": "Total Tasks",

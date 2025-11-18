@@ -145,6 +145,14 @@ const Sidebar: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Helper to close sidebar on mobile after navigation
+    const handleNavigation = (callback: () => void) => {
+        callback();
+        if (window.innerWidth < 768) {
+            setIsSidebarOpen(false);
+        }
+    };
+
     const performLogout = () => {
         showConfirmation(
             t('sidebar.logout'),
@@ -297,146 +305,170 @@ const Sidebar: React.FC = () => {
     if (!currentUser) return null;
 
     return (
-        <aside className={`flex-shrink-0 bg-secondary flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-72' : 'w-0'}`}>
-            <div className="w-72 flex flex-col h-full">
-                <div className="flex-shrink-0 p-4 border-b border-border">
-                    <Logo />
-                </div>
-                <div className="p-4 flex-grow flex flex-col min-h-0">
-                    <WorkspaceSwitcher 
-                        workspaces={workspaces}
-                        selectedWorkspace={selectedWorkspace}
-                        onSelectWorkspace={handleSelectWorkspace}
-                        onAddWorkspace={() => { setWorkspaceToEdit(null); setIsWorkspaceModalOpen(true); }}
-                        canManage={permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS)}
-                    />
-                    
-                    <div className="mb-4 space-y-1">
-                         <button 
-                            onClick={() => { setActiveView('my_tasks'); setSelectedListId(null); }}
-                            className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'my_tasks' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+        <>
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fadeIn" 
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 md:static md:z-auto
+                flex-shrink-0 bg-secondary flex flex-col h-full 
+                transition-all duration-300 ease-in-out overflow-hidden 
+                ${isSidebarOpen ? 'w-72 translate-x-0 shadow-2xl md:shadow-none' : 'w-0 -translate-x-full md:w-0 md:translate-x-0'}
+            `}>
+                <div className="w-72 flex flex-col h-full">
+                    <div className="flex-shrink-0 p-4 border-b border-border flex items-center justify-between">
+                        <Logo />
+                        {/* Mobile Close Button */}
+                        <button 
+                            onClick={() => setIsSidebarOpen(false)} 
+                            className="md:hidden p-2 text-text-secondary hover:text-text-primary rounded-full hover:bg-secondary-focus"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
-                            <span className="font-semibold">{t('sidebar.myTasks')}</span>
-                        </button>
-                        {permissions.has(Permission.VIEW_DASHBOARD) && (
-                            <button 
-                                onClick={() => { setActiveView('dashboard'); setSelectedListId(null); }}
-                                className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'dashboard' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-                                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-                                </svg>
-                                <span className="font-semibold">{t('sidebar.dashboard')}</span>
-                            </button>
-                        )}
-                        {permissions.has(Permission.MANAGE_APP) && (
-                            <button 
-                                onClick={() => { setActiveView('app_admin'); setSelectedListId(null); }}
-                                className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'app_admin' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-semibold">{t('sidebar.appAdmin')}</span>
-                            </button>
-                        )}
-                    </div>
-                    
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-sm font-semibold uppercase text-text-secondary tracking-wider">{t('sidebar.projects')}</h2>
-                        {permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
-                           <div className="flex items-center gap-1">
-                                <button onClick={() => { setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded-md" title={t('sidebar.newFolder')}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
-                                </button>
-                                <button onClick={() => { setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded-md" title={t('sidebar.newProject')}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    <nav className="flex-grow overflow-y-auto -mr-2 pr-2" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
-                        <ul>
-                            {folderStructure.structured.map(folder => (
-                                <li key={folder.id} className="relative"
-                                    draggable={isDraggable}
-                                    onDragStart={(e) => handleDragStart(e, folder.id, 'folder')}
-                                    onDragEnd={handleDragEnd}
-                                    onDragOver={(e) => handleDragOver(e, folder.id, 'folder')}
-                                    onDragLeave={handleDragLeave}
-                                >
-                                    {dropTarget?.targetId === folder.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                    <div className={`rounded-lg ${draggedItem?.id === folder.id ? 'opacity-50' : ''} ${dropTarget?.targetId === folder.id && dropTarget.position === 'middle' ? 'bg-primary/20 ring-2 ring-primary' : ''}`}>
-                                        <button onClick={() => toggleFolder(folder.id)} className="w-full flex items-center p-2 text-text-secondary hover:text-text-primary font-semibold">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 transition-transform ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
-                                            {folder.name}
-                                        </button>
-                                        {openFolders.has(folder.id) && (
-                                            <ul className="pl-4">
-                                                {folder.lists.map(list => (
-                                                     <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
-                                                        {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                                        <a href="#" onClick={(e) => { e.preventDefault(); setSelectedListId(list.id); setActiveView('list'); setIsSidebarOpen(window.innerWidth > 768); }} className={`flex items-center p-2 rounded-lg transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
-                                                            <span className={`w-3 h-3 rounded-full mr-3 ${list.color}`}></span>
-                                                            <span className="font-semibold">{list.name}</span>
-                                                        </a>
-                                                        {dropTarget?.targetId === list.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                    {dropTarget?.targetId === folder.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                </li>
-                            ))}
-                             {folderStructure.standaloneLists.map(list => (
-                                <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
-                                     {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                    <a href="#" onClick={(e) => { e.preventDefault(); setSelectedListId(list.id); setActiveView('list'); setIsSidebarOpen(window.innerWidth > 768); }} className={`flex items-center p-2 rounded-lg transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
-                                        <span className={`w-3 h-3 rounded-full mr-3 ${list.color}`}></span>
-                                        <span className="font-semibold">{list.name}</span>
-                                    </a>
-                                    {dropTarget?.targetId === list.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                </li>
-                            ))}
-                        </ul>
-                    </nav>
-                </div>
-
-                <div className="p-4 border-t border-border mt-auto">
-                    <button onClick={() => setIsSettingsModalOpen(true)} className="w-full mb-2 flex items-center p-2 rounded-lg transition-colors hover:bg-surface text-text-secondary hover:text-text-primary" >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-semibold">{t('sidebar.settings')}</span>
-                    </button>
-                    <div ref={userPanelRef} className="relative flex-grow">
-                        {isUserPanelOpen && (
-                            <UserPanel
-                                currentUser={currentUser}
-                                onOpenUserProfile={() => setEditingUserId(currentUser.id)}
-                                onLogout={performLogout}
-                                onClose={() => setIsUserPanelOpen(false)}
-                                onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
-                            />
-                        )}
-                        <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-surface">
-                            <AvatarWithStatus user={currentUser} className="w-10 h-10" />
-                            <div className="flex-grow min-w-0 ml-3">
-                                <p className="font-semibold text-text-primary truncate">{currentUser.name}</p>
-                                <p className="text-sm text-text-secondary truncate">{currentUser.title}</p>
-                            </div>
-                            <svg className="w-5 h-5 text-text-secondary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
+                    <div className="p-4 flex-grow flex flex-col min-h-0">
+                        <WorkspaceSwitcher 
+                            workspaces={workspaces}
+                            selectedWorkspace={selectedWorkspace}
+                            onSelectWorkspace={(id) => handleNavigation(() => handleSelectWorkspace(id))}
+                            onAddWorkspace={() => { setWorkspaceToEdit(null); setIsWorkspaceModalOpen(true); }}
+                            canManage={permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS)}
+                        />
+                        
+                        <div className="mb-4 space-y-1">
+                             <button 
+                                onClick={() => handleNavigation(() => { setActiveView('my_tasks'); setSelectedListId(null); })}
+                                className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'my_tasks' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+                                <span className="font-semibold">{t('sidebar.myTasks')}</span>
+                            </button>
+                            {permissions.has(Permission.VIEW_DASHBOARD) && (
+                                <button 
+                                    onClick={() => handleNavigation(() => { setActiveView('dashboard'); setSelectedListId(null); })}
+                                    className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'dashboard' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                    </svg>
+                                    <span className="font-semibold">{t('sidebar.dashboard')}</span>
+                                </button>
+                            )}
+                            {permissions.has(Permission.MANAGE_APP) && (
+                                <button 
+                                    onClick={() => handleNavigation(() => { setActiveView('app_admin'); setSelectedListId(null); })}
+                                    className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'app_admin' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="font-semibold">{t('sidebar.appAdmin')}</span>
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-sm font-semibold uppercase text-text-secondary tracking-wider">{t('sidebar.projects')}</h2>
+                            {permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
+                               <div className="flex items-center gap-1">
+                                    <button onClick={() => { setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded-md" title={t('sidebar.newFolder')}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+                                    </button>
+                                    <button onClick={() => { setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded-md" title={t('sidebar.newProject')}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <nav className="flex-grow overflow-y-auto -mr-2 pr-2" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
+                            <ul>
+                                {folderStructure.structured.map(folder => (
+                                    <li key={folder.id} className="relative"
+                                        draggable={isDraggable}
+                                        onDragStart={(e) => handleDragStart(e, folder.id, 'folder')}
+                                        onDragEnd={handleDragEnd}
+                                        onDragOver={(e) => handleDragOver(e, folder.id, 'folder')}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        {dropTarget?.targetId === folder.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                        <div className={`rounded-lg ${draggedItem?.id === folder.id ? 'opacity-50' : ''} ${dropTarget?.targetId === folder.id && dropTarget.position === 'middle' ? 'bg-primary/20 ring-2 ring-primary' : ''}`}>
+                                            <button onClick={() => toggleFolder(folder.id)} className="w-full flex items-center p-2 text-text-secondary hover:text-text-primary font-semibold">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 transition-transform ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                                                {folder.name}
+                                            </button>
+                                            {openFolders.has(folder.id) && (
+                                                <ul className="pl-4">
+                                                    {folder.lists.map(list => (
+                                                         <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
+                                                            {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} className={`flex items-center p-2 rounded-lg transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
+                                                                <span className={`w-3 h-3 rounded-full mr-3 ${list.color}`}></span>
+                                                                <span className="font-semibold">{list.name}</span>
+                                                            </a>
+                                                            {dropTarget?.targetId === list.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                        {dropTarget?.targetId === folder.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                    </li>
+                                ))}
+                                 {folderStructure.standaloneLists.map(list => (
+                                    <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
+                                         {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                        <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} className={`flex items-center p-2 rounded-lg transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
+                                            <span className={`w-3 h-3 rounded-full mr-3 ${list.color}`}></span>
+                                            <span className="font-semibold">{list.name}</span>
+                                        </a>
+                                        {dropTarget?.targetId === list.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
+                    </div>
+
+                    <div className="p-4 border-t border-border mt-auto">
+                        <button onClick={() => setIsSettingsModalOpen(true)} className="w-full mb-2 flex items-center p-2 rounded-lg transition-colors hover:bg-surface text-text-secondary hover:text-text-primary" >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-semibold">{t('sidebar.settings')}</span>
+                        </button>
+                        <div ref={userPanelRef} className="relative flex-grow">
+                            {isUserPanelOpen && (
+                                <UserPanel
+                                    currentUser={currentUser}
+                                    onOpenUserProfile={() => setEditingUserId(currentUser.id)}
+                                    onLogout={performLogout}
+                                    onClose={() => setIsUserPanelOpen(false)}
+                                    onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
+                                />
+                            )}
+                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-surface">
+                                <AvatarWithStatus user={currentUser} className="w-10 h-10" />
+                                <div className="flex-grow min-w-0 ml-3">
+                                    <p className="font-semibold text-text-primary truncate">{currentUser.name}</p>
+                                    <p className="text-sm text-text-secondary truncate">{currentUser.title}</p>
+                                </div>
+                                <svg className="w-5 h-5 text-text-secondary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
+        </>
     );
 };
 

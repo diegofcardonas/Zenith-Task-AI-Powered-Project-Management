@@ -88,6 +88,8 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
     const [tooltip, setTooltip] = useState<{ task: Task; user: User | undefined; x: number; y: number } | null>(null);
     const [sidebarWidth, setSidebarWidth] = useState(300);
     const isResizingSidebar = useRef(false);
+    const [viewMode, setViewMode] = useState<'list' | 'chart'>('chart');
+    const [isMobile, setIsMobile] = useState(false);
     
     const timelineRef = useRef<HTMLDivElement>(null);
     const taskListRef = useRef<HTMLDivElement>(null);
@@ -108,6 +110,13 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
     } | null>(null);
 
     const dayWidth = 40;
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const sortedTasks = useMemo(() => {
         return [...tasks]
@@ -374,13 +383,37 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
     const ganttHeight = sortedTasks.length * rowHeight;
 
     return (
-        <div className="bg-surface rounded-lg h-full flex flex-col overflow-hidden">
+        <div className="bg-surface rounded-lg h-full flex flex-col overflow-hidden relative">
+             {/* Mobile Toggle Button */}
+             <div className="md:hidden absolute bottom-6 right-6 z-30">
+                <button 
+                    onClick={() => setViewMode(prev => prev === 'list' ? 'chart' : 'list')}
+                    className="bg-primary text-white px-4 py-3 rounded-full shadow-lg font-semibold flex items-center gap-2 hover:bg-primary-focus transition-colors"
+                >
+                    {viewMode === 'chart' ? (
+                        <>
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+                           {t('gantt.showList')}
+                        </>
+                    ) : (
+                        <>
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>
+                           {t('gantt.showChart')}
+                        </>
+                    )}
+                </button>
+             </div>
+
             {tooltip && <Tooltip task={tooltip.task} user={tooltip.user} left={tooltip.x + 15} top={tooltip.y} />}
-            <div className="flex-grow grid h-full" style={{ gridTemplateColumns: `${sidebarWidth}px 2px 1fr` }}>
+            
+            <div className={`flex-grow h-full ${isMobile ? 'flex flex-col' : 'grid'}`} style={!isMobile ? { gridTemplateColumns: `${sidebarWidth}px 2px 1fr` } : {}}>
                 {/* Task List */}
-                <div className="border-r border-border flex flex-col" style={{ width: `${sidebarWidth}px` }}>
+                <div 
+                    className={`border-r border-border flex flex-col bg-surface ${isMobile && viewMode === 'chart' ? 'hidden' : 'flex'}`} 
+                    style={!isMobile ? { width: `${sidebarWidth}px` } : { width: '100%', height: '100%' }}
+                >
                     <div className="font-semibold text-text-primary p-2 h-[68px] flex items-center border-b border-border sticky top-0 bg-surface z-10">{t('gantt.taskName')}</div>
-                    <div ref={taskListRef} className="overflow-y-scroll overflow-x-hidden" onScroll={() => handleScroll('list')}>
+                    <div ref={taskListRef} className="overflow-y-scroll overflow-x-hidden flex-grow" onScroll={() => handleScroll('list')}>
                         <div className="relative" style={{ height: `${ganttHeight}px` }}>
                              {Object.values(taskPositions).map(({ top, task }) => (
                                 <div
@@ -396,10 +429,17 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
                         </div>
                     </div>
                 </div>
-                {/* Resizer */}
-                <div className="cursor-col-resize bg-border hover:bg-primary transition-colors w-0.5 h-full" onMouseDown={handleMouseDownOnResizer}></div>
+                
+                {/* Resizer - Desktop only */}
+                {!isMobile && <div className="cursor-col-resize bg-border hover:bg-primary transition-colors w-0.5 h-full" onMouseDown={handleMouseDownOnResizer}></div>}
+
                 {/* Timeline */}
-                <div className="overflow-auto" ref={timelineRef} onScroll={() => handleScroll('timeline')}>
+                <div 
+                    className={`overflow-auto bg-surface ${isMobile && viewMode === 'list' ? 'hidden' : 'block'}`} 
+                    ref={timelineRef} 
+                    onScroll={() => handleScroll('timeline')}
+                    style={isMobile ? { width: '100%', height: '100%' } : {}}
+                >
                      <div className="relative" style={{ width: `${timelineWidth}px` }}>
                         <TimelineHeader dateRange={dateRange} dayWidth={dayWidth} />
                         <div className="relative" style={{ height: `${ganttHeight}px` }}>

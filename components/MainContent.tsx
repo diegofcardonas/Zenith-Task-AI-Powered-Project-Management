@@ -96,45 +96,51 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <main className="flex-grow flex flex-col h-full overflow-y-auto">
+    <main className="flex-grow flex flex-col h-full overflow-y-auto bg-background">
       <Header title={selectedList?.name || t('sidebar.projects')} />
       {selectedList ? (
         <>
-        <div className="flex-shrink-0 p-3 sm:p-4 border-b border-border flex flex-wrap justify-between items-center gap-2">
-            <div className="bg-secondary p-1 rounded-lg flex items-center flex-wrap">
-                <button onClick={() => setCurrentView(ViewType.Board)} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Board ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.board')}</button>
-                <button onClick={() => setCurrentView(ViewType.List)} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.List ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.list')}</button>
-                <button onClick={() => setCurrentView(ViewType.Calendar)} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Calendar ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.calendar')}</button>
-                <button onClick={() => setCurrentView(ViewType.Gantt)} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Gantt ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.gantt')}</button>
-                <button onClick={() => setCurrentView(ViewType.ProjectDashboard)} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.ProjectDashboard ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.dashboard')}</button>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-                <div className="relative">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
-                        className="bg-secondary pl-3 pr-8 py-1.5 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
-                        aria-label={t('modals.status')}
-                    >
-                        <option value="all">{t('common.allStatuses')}</option>
-                        {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                    </div>
+        <div className="flex-shrink-0 p-3 sm:p-4 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            {/* Scrollable View Switcher for Mobile */}
+            <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-3 md:mx-0 px-3 md:px-0 no-scrollbar">
+                <div className="bg-secondary p-1 rounded-lg flex items-center whitespace-nowrap w-max">
+                    <button onClick={() => setCurrentView(ViewType.Board)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Board ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.board')}</button>
+                    <button onClick={() => setCurrentView(ViewType.List)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.List ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.list')}</button>
+                    <button onClick={() => setCurrentView(ViewType.Calendar)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Calendar ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.calendar')}</button>
+                    <button onClick={() => setCurrentView(ViewType.Gantt)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Gantt ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.gantt')}</button>
+                    <button onClick={() => setCurrentView(ViewType.ProjectDashboard)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.ProjectDashboard ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.dashboard')}</button>
                 </div>
-                 <div className="relative">
-                    <select
-                        value={priorityFilter}
-                        onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
-                        className="bg-secondary pl-3 pr-8 py-1.5 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
-                        aria-label={t('modals.priority')}
-                    >
-                        <option value="all">{t('common.allPriorities')}</option>
-                        {Object.values(Priority).map(p => <option key={p} value={p}>{translatePriority(p)}</option>)}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-between md:justify-end">
+                <div className="flex gap-2">
+                    <div className="relative">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
+                            className="bg-secondary pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
+                            aria-label={t('modals.status')}
+                        >
+                            <option value="all">{t('common.allStatuses')}</option>
+                            {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={priorityFilter}
+                            onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                            className="bg-secondary pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
+                            aria-label={t('modals.priority')}
+                        >
+                            <option value="all">{t('common.allPriorities')}</option>
+                            {Object.values(Priority).map(p => <option key={p} value={p}>{translatePriority(p)}</option>)}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
                     </div>
                 </div>
                  {canCreateTasks && (
@@ -145,7 +151,7 @@ const MainContent: React.FC = () => {
                             className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200 flex items-center disabled:bg-gray-500 disabled:cursor-not-allowed"
                             title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                           </svg>
                           <span className="hidden sm:inline">{t('common.new')}</span>
@@ -170,7 +176,7 @@ const MainContent: React.FC = () => {
                  )}
             </div>
         </div>
-        <div className="flex-grow p-3 sm:p-6">
+        <div className="flex-grow p-3 sm:p-6 overflow-x-hidden">
             {renderCurrentView()}
         </div>
         </>

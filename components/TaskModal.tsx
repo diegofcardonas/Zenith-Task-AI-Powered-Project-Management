@@ -29,13 +29,13 @@ const CommentComponent: React.FC<{
     return (
         <div className="flex gap-3">
             <AvatarWithStatus user={comment.user} className="w-8 h-8 flex-shrink-0 mt-1" />
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0">
                 <div className="bg-secondary p-3 rounded-lg">
                     <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-sm text-text-primary">{comment.user.name}</span>
-                        <span className="text-xs text-text-secondary">{timeAgo(comment.timestamp)}</span>
+                        <span className="font-semibold text-sm text-text-primary truncate">{comment.user.name}</span>
+                        <span className="text-xs text-text-secondary whitespace-nowrap ml-2">{timeAgo(comment.timestamp)}</span>
                     </div>
-                    <p className="text-sm text-text-primary">{comment.text}</p>
+                    <p className="text-sm text-text-primary break-words">{comment.text}</p>
                 </div>
                 {!isReadOnly && <button onClick={() => onReply(comment.id)} className="text-xs text-primary hover:underline mt-1 ml-2">{t('modals.reply')}</button>}
                 
@@ -150,7 +150,6 @@ const TaskModal: React.FC = () => {
     const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-// Fix: Explicitly type the 'file' parameter in the forEach callback to resolve type inference issues where 'file' was being treated as 'unknown'.
             files.forEach((file: File) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -247,17 +246,17 @@ const TaskModal: React.FC = () => {
 
     return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-40 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-end md:items-center z-40 backdrop-blur-sm animate-fadeIn"
       onClick={handleSaveAndClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-surface rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col animate-scaleIn"
+        className="bg-surface w-full h-full md:h-[90vh] md:max-w-4xl md:rounded-xl shadow-2xl flex flex-col animate-scaleIn overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0">
-          <div className="text-sm text-text-secondary">{project?.name}</div>
+        <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0 bg-surface sticky top-0 z-10">
+          <div className="text-sm text-text-secondary truncate max-w-[50%]">{project?.name}</div>
           <div className="flex items-center gap-2">
             {canEdit && (
                 <button
@@ -270,7 +269,7 @@ const TaskModal: React.FC = () => {
                             subtasks: editedTask.subtasks.map(st => ({...st, completed: false})),
                         });
                     }}
-                    className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-primary/10 transition-colors"
+                    className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-primary/10 transition-colors hidden sm:block"
                     title={t('modals.saveAsTemplate')}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -292,7 +291,7 @@ const TaskModal: React.FC = () => {
         </header>
         
         <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 overflow-hidden">
-            <main className="lg:col-span-2 p-6 overflow-y-auto space-y-6">
+            <main className="lg:col-span-2 p-4 sm:p-6 overflow-y-auto space-y-6">
                 {/* Title */}
                 <input
                     type="text"
@@ -300,12 +299,12 @@ const TaskModal: React.FC = () => {
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder={t('modals.taskTitlePlaceholder')}
                     disabled={!canEdit}
-                    className="w-full bg-transparent text-3xl font-bold focus:outline-none"
+                    className="w-full bg-transparent text-2xl sm:text-3xl font-bold focus:outline-none break-words"
                 />
 
                 {/* AI Suggestion */}
                  {canEdit && aiSuggestion && (
-                    <div className="bg-secondary/50 p-3 rounded-lg flex items-center justify-between text-sm animate-fadeIn">
+                    <div className="bg-secondary/50 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between text-sm animate-fadeIn gap-2">
                         <div>
                             <span className="font-semibold text-primary">{t('modals.aiSuggestion')}</span>
                             <span className="text-text-secondary ml-2">
@@ -315,7 +314,7 @@ const TaskModal: React.FC = () => {
                                })}
                             </span>
                         </div>
-                        <button onClick={() => { handleInputChange('priority', aiSuggestion.priority); handleInputChange('assigneeId', aiSuggestion.assigneeId); setAiSuggestion(null); }} className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-focus text-xs font-semibold">{t('modals.apply')}</button>
+                        <button onClick={() => { handleInputChange('priority', aiSuggestion.priority); handleInputChange('assigneeId', aiSuggestion.assigneeId); setAiSuggestion(null); }} className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-focus text-xs font-semibold self-start sm:self-auto">{t('modals.apply')}</button>
                     </div>
                 )}
 
@@ -354,35 +353,35 @@ const TaskModal: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                         {editedTask.subtasks.map(st => (
-                            <div key={st.id} className="flex items-center gap-2 group">
-                                <input type="checkbox" checked={st.completed} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, e.target.checked, st.text)} className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary" />
-                                <input type="text" value={st.text} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, st.completed, e.target.value)} className={`flex-grow bg-transparent p-1 rounded ${st.completed ? 'line-through text-text-secondary' : ''}`} />
-                                {canEdit && <button onClick={() => handleDeleteSubtask(st.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
+                            <div key={st.id} className="flex items-start gap-2 group">
+                                <input type="checkbox" checked={st.completed} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, e.target.checked, st.text)} className="w-4 h-4 mt-1 rounded text-primary bg-surface border-border focus:ring-primary flex-shrink-0" />
+                                <input type="text" value={st.text} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, st.completed, e.target.value)} className={`flex-grow bg-transparent p-1 rounded min-w-0 ${st.completed ? 'line-through text-text-secondary' : ''}`} />
+                                {canEdit && <button onClick={() => handleDeleteSubtask(st.id)} className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-text-secondary hover:text-priority-high p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
                             </div>
                         ))}
-                        {canEdit && <input type="text" value={newSubtaskText} onChange={e => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder={t('modals.addSubtask')} className="w-full bg-secondary p-1 mt-2 rounded border border-transparent focus:border-border" />}
+                        {canEdit && <input type="text" value={newSubtaskText} onChange={e => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder={t('modals.addSubtask')} className="w-full bg-secondary p-2 mt-2 rounded border border-transparent focus:border-border" />}
                     </div>
                 </div>
 
                 {/* Comments */}
-                 <div>
+                 <div className="pb-6">
                     <h3 className="text-sm font-semibold text-text-secondary mb-2">{t('modals.comments')}</h3>
                     {canComment && (
                         <div className="mb-4">
                              <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={3} placeholder={replyingTo ? t('modals.reply') : t('modals.commentPlaceholder')} className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
-                             <div className="flex justify-between items-center mt-2">
-                                <div className="flex items-center gap-2">
-                                  <button onClick={handleGenerateReplies} disabled={isSuggesting} className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50">
+                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-2">
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                  <button onClick={handleGenerateReplies} disabled={isSuggesting} className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50 whitespace-nowrap">
                                       {isSuggesting ? <Spinner /> : '✨'} {t('modals.suggestReplies')}
                                   </button>
                                   {replyingTo && <button onClick={() => setReplyingTo(null)} className="text-xs text-text-secondary hover:underline">{t('common.cancel')}</button>}
                                 </div>
-                                <button onClick={() => handleAddComment(newComment, replyingTo || undefined)} className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus text-sm">{replyingTo ? t('modals.reply') : t('modals.comment')}</button>
+                                <button onClick={() => handleAddComment(newComment, replyingTo || undefined)} className="w-full sm:w-auto px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus text-sm">{replyingTo ? t('modals.reply') : t('modals.comment')}</button>
                              </div>
                              {suggestedReplies.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     {suggestedReplies.map((reply, i) => (
-                                        <button key={i} onClick={() => handleAddComment(reply)} className="px-2 py-1 bg-secondary text-text-secondary text-xs rounded-full hover:bg-secondary-focus">{reply}</button>
+                                        <button key={i} onClick={() => handleAddComment(reply)} className="px-2 py-1 bg-secondary text-text-secondary text-xs rounded-full hover:bg-secondary-focus text-left">{reply}</button>
                                     ))}
                                 </div>
                              )}
@@ -396,7 +395,7 @@ const TaskModal: React.FC = () => {
                  </div>
 
             </main>
-            <aside className="lg:col-span-1 p-6 border-l border-border overflow-y-auto space-y-5">
+            <aside className="lg:col-span-1 p-4 sm:p-6 border-t lg:border-t-0 lg:border-l border-border overflow-y-auto space-y-5 bg-surface/50 lg:bg-transparent">
                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <label className="font-semibold text-text-secondary block">{t('modals.status')}</label>
@@ -434,8 +433,8 @@ const TaskModal: React.FC = () => {
                     <div className="space-y-2">
                         {editedTask.attachments.map(att => (
                             <div key={att.id} className="bg-secondary p-2 rounded-md flex items-center justify-between text-sm group">
-                                <a href={att.url} download={att.name} className="truncate hover:underline">{att.name}</a>
-                                {canEdit && <button onClick={() => handleDeleteAttachment(att.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
+                                <a href={att.url} download={att.name} className="truncate hover:underline flex-grow mr-2">{att.name}</a>
+                                {canEdit && <button onClick={() => handleDeleteAttachment(att.id)} className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
                             </div>
                         ))}
                     </div>

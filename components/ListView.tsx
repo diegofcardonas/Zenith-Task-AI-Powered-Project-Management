@@ -17,13 +17,13 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
     const selectionText = t('listView.selected', { count: selectedCount });
     
     return (
-        <div className="flex items-center justify-between p-2 bg-secondary border-b border-border animate-fadeIn">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 bg-secondary border-b border-border animate-fadeIn gap-2">
             <span className="font-semibold text-sm">{selectionText}</span>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                  <select 
                     onChange={(e) => onUpdate({ status: e.target.value as Status })}
                     defaultValue=""
-                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
+                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary flex-grow sm:flex-grow-0"
                  >
                     <option value="" disabled>{t('listView.changeStatus')}</option>
                     {Object.values(Status).map(s => <option key={s} value={s}>{t(`common.${s.replace(/\s+/g, '').toLowerCase()}`)}</option>)}
@@ -31,7 +31,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
                  <select 
                     onChange={(e) => onUpdate({ priority: e.target.value as Priority })}
                     defaultValue=""
-                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
+                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary flex-grow sm:flex-grow-0"
                  >
                     <option value="" disabled>{t('listView.changePriority')}</option>
                     {Object.values(Priority).map(p => <option key={p} value={p}>{t(`common.${p.toLowerCase()}`)}</option>)}
@@ -39,22 +39,24 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
                 <select 
                     onChange={(e) => onUpdate({ assigneeId: e.target.value || null })}
                     defaultValue=""
-                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
+                    className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary flex-grow sm:flex-grow-0"
                  >
                     <option value="" disabled>{t('listView.changeAssignee')}</option>
                     {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
-                <button 
-                    onClick={onDelete} 
-                    className="p-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
-                    {t('common.delete')}
-                </button>
-                <button onClick={onClear} className="p-1 text-text-secondary hover:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                </button>
+                <div className="flex items-center gap-1 ml-auto sm:ml-0">
+                    <button 
+                        onClick={onDelete} 
+                        className="p-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                        {t('common.delete')}
+                    </button>
+                    <button onClick={onClear} className="p-1 text-text-secondary hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -146,7 +148,8 @@ const ListView: React.FC = () => {
             />
         )}
         <div className="flex-shrink-0">
-            <div className="grid grid-cols-12 gap-4 p-4 border-b border-border text-xs text-text-secondary uppercase font-semibold">
+            {/* Header Row - Hidden on mobile, visible on tablet/desktop */}
+            <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-border text-xs text-text-secondary uppercase font-semibold">
                 <div className="col-span-1 flex items-center">
                     <input 
                         type="checkbox" 
@@ -163,6 +166,19 @@ const ListView: React.FC = () => {
                 <div className="col-span-2 hidden md:block">{t('listView.priority')}</div>
                 <div className="col-span-2 text-right">{t('listView.actions')}</div>
             </div>
+             {/* Mobile "Select All" helper */}
+             <div className="md:hidden p-3 border-b border-border flex items-center">
+                <label className="flex items-center gap-2 text-xs font-semibold text-text-secondary uppercase">
+                     <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50"
+                        onChange={handleToggleAll}
+                        checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
+                        disabled={!canEdit}
+                    />
+                    Select All
+                </label>
+             </div>
         </div>
         <div className="overflow-y-auto">
             {tasks.map(task => (

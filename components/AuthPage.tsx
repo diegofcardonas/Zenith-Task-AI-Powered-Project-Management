@@ -27,6 +27,11 @@ const AuthPage: React.FC = () => {
     setName('');
   };
 
+  const fillCredentials = (demoEmail: string) => {
+      setEmail(demoEmail);
+      setPassword('password123'); // Dummy password to satisfy required field
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4 animate-fadeIn">
       <div className="w-full max-w-sm mx-auto">
@@ -94,12 +99,33 @@ const AuthPage: React.FC = () => {
           </div>
           
           {mode === 'login' && (
-              <div className="mt-8 pt-6 border-t border-border text-center">
-                  <p className="text-xs text-text-secondary mb-2 uppercase font-bold tracking-wider">Demo Accounts</p>
-                  <div className="text-xs space-y-1 text-text-secondary">
-                      <p><span className="font-semibold text-text-primary">Admin:</span> alex@example.com</p>
-                      <p><span className="font-semibold text-text-primary">Member:</span> sarah@example.com</p>
-                      <p><span className="font-semibold text-text-primary">Viewer:</span> mike@example.com</p>
+              <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs text-text-secondary mb-3 text-center uppercase font-bold tracking-wider">{t('auth.fastLogin')}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => fillCredentials('alex@example.com')}
+                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                      >
+                          <span className="text-xs font-bold text-primary group-hover:text-white mb-1">Admin</span>
+                          <span className="text-[10px] text-text-secondary">Alex</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => fillCredentials('sarah@example.com')}
+                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                      >
+                          <span className="text-xs font-bold text-blue-400 group-hover:text-white mb-1">Member</span>
+                          <span className="text-[10px] text-text-secondary">Sarah</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => fillCredentials('mike@example.com')}
+                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                      >
+                          <span className="text-xs font-bold text-yellow-400 group-hover:text-white mb-1">Viewer</span>
+                          <span className="text-[10px] text-text-secondary">Mike</span>
+                      </button>
                   </div>
               </div>
           )}

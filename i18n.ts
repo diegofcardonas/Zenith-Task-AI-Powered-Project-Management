@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 const es = {
@@ -50,6 +51,8 @@ const es = {
     "more": "más"
   },
   "sidebar": {
+    "menu": "Menú",
+    "search": "Buscar...",
     "myTasks": "Mis Tareas",
     "dashboard": "Dashboard",
     "appAdmin": "Admin de App",
@@ -221,7 +224,10 @@ const es = {
     "noActivity": "No hay actividad reciente para mostrar.",
     "filterByRole": "Filtrar por Rol",
     "filterByTeam": "Filtrar por Equipo",
-    "filterByStatus": "Filtrar por Estado"
+    "filterByStatus": "Filtrar por Estado",
+    "priorityBreakdown": "Desglose por Prioridad",
+    "searchUsers": "Buscar usuarios...",
+    "reliability": "Fiabilidad"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -411,7 +417,8 @@ const es = {
     "loginToAccount": "Inicia sesión en tu cuenta",
     "createAnAccount": "Crea una cuenta nueva",
     "dontHaveAccount": "¿No tienes una cuenta?",
-    "alreadyHaveAccount": "¿Ya tienes una cuenta?"
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "fastLogin": "Acceso Rápido Demo"
   }
 };
 const en = {
@@ -464,6 +471,8 @@ const en = {
     "more": "more"
   },
   "sidebar": {
+    "menu": "Menu",
+    "search": "Search...",
     "myTasks": "My Tasks",
     "dashboard": "Dashboard",
     "appAdmin": "App Admin",
@@ -576,7 +585,7 @@ const en = {
     "addMoreDetail": "Add a more detailed description...",
     "attachments": "Attachments",
     "attachFile": "+ Attach File",
-    "subtasks": "Subtasks",
+    "subtasks": "Subtareas",
     "subtasksCompleted": "Subtareas ({{completed}}/{{total}})",
     "addSubtask": "+ Add a subtask",
     "dependencies": "Dependencies",
@@ -635,7 +644,10 @@ const en = {
     "noActivity": "No recent activity to show.",
     "filterByRole": "Filter by Role",
     "filterByTeam": "Filter by Team",
-    "filterByStatus": "Filter by Status"
+    "filterByStatus": "Filter by Status",
+    "priorityBreakdown": "Priority Breakdown",
+    "searchUsers": "Search users...",
+    "reliability": "Reliability"
   },
   "notifications": {
     "title": "Notifications",
@@ -825,7 +837,8 @@ const en = {
     "loginToAccount": "Login to your account",
     "createAnAccount": "Create a new account",
     "dontHaveAccount": "Don't have an account?",
-    "alreadyHaveAccount": "Already have an account?"
+    "alreadyHaveAccount": "Already have an account?",
+    "fastLogin": "Fast Demo Login"
   }
 };
 

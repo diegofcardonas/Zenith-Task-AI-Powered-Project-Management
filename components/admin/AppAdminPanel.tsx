@@ -1,5 +1,6 @@
+
 import React, { useMemo, useState } from 'react';
-import { User, Role, Task, Status } from '../../types';
+import { User, Role, Task, Status, Priority } from '../../types';
 import Header from '../Header';
 import AvatarWithStatus from '../AvatarWithStatus';
 import { useAppContext } from '../../contexts/AppContext';
@@ -33,25 +34,40 @@ const UserCard: React.FC<{
 }> = ({ user, tasks, currentUser, onEdit, onDelete, onUpdateRole, isLastAdmin }) => {
     const { t } = useTranslation();
     const activeTasks = tasks.filter(t => t.assigneeId === user.id && t.status !== Status.Done).length;
-    const totalTasks = tasks.filter(t => t.assigneeId === user.id).length;
-    const maxCapacity = 10; // Arbitrary capacity for visualization
+    const completedTasks = tasks.filter(t => t.assigneeId === user.id && t.status === Status.Done);
+    const totalCompleted = completedTasks.length;
+    
+    // Calculate reliability: tasks completed on or before due date
+    const onTimeTasks = completedTasks.filter(t => {
+        if (!t.dueDate) return true;
+        // A simple check: if today is past due date and it's done. 
+        // Real apps would check a 'completedAt' timestamp vs 'dueDate'.
+        // Here we assume if it's Done, it was done recently. 
+        // To make it more visual with mock data, we'll simulate a score based on overdue count for active tasks + done tasks
+        return new Date(t.dueDate) >= new Date(); 
+    }).length;
+
+    const reliabilityScore = totalCompleted > 0 ? Math.round((onTimeTasks / totalCompleted) * 100) : 100;
+
+    const maxCapacity = 8; // Arbitrary capacity for visualization
     const workloadPercentage = Math.min((activeTasks / maxCapacity) * 100, 100);
     
     const workloadColor = workloadPercentage > 80 ? 'bg-red-500' : workloadPercentage > 50 ? 'bg-yellow-500' : 'bg-green-500';
+    const reliabilityColor = reliabilityScore > 80 ? 'bg-green-500' : reliabilityScore > 50 ? 'bg-yellow-500' : 'bg-red-500';
 
     return (
         <div className="bg-secondary p-4 rounded-lg border border-border hover:border-primary/50 transition-all">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                     <AvatarWithStatus user={user} className="w-12 h-12" />
-                    <div>
-                        <div className="font-bold text-text-primary">{user.name}</div>
-                        <div className="text-xs text-text-secondary">{user.email}</div>
-                        <div className="text-xs text-primary mt-0.5">{user.title}</div>
+                    <div className="min-w-0">
+                        <div className="font-bold text-text-primary truncate">{user.name}</div>
+                        <div className="text-xs text-text-secondary truncate">{user.email}</div>
+                        <div className="text-xs text-primary mt-0.5 truncate">{user.title}</div>
                     </div>
                 </div>
                 {user.id !== currentUser.id && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-shrink-0">
                         <button onClick={onEdit} className="p-1.5 text-text-secondary hover:text-blue-400 rounded-md hover:bg-blue-500/10">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
                         </button>
@@ -62,7 +78,7 @@ const UserCard: React.FC<{
                 )}
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                 <div>
                     <div className="text-xs text-text-secondary">{t('admin.role')}</div>
                      <select
@@ -76,17 +92,28 @@ const UserCard: React.FC<{
                 </div>
                  <div>
                     <div className="text-xs text-text-secondary">{t('admin.team')}</div>
-                    <div className="font-medium text-text-primary mt-1 truncate">{user.team}</div>
+                    <div className="font-medium text-text-primary mt-1 truncate bg-surface px-2 py-1 rounded border border-border text-xs">{user.team}</div>
                 </div>
             </div>
             
-            <div>
-                 <div className="flex justify-between text-xs text-text-secondary mb-1">
-                    <span>{t('admin.workload')}</span>
-                    <span>{activeTasks} / {maxCapacity}</span>
+            <div className="space-y-3">
+                 <div>
+                     <div className="flex justify-between text-xs text-text-secondary mb-1">
+                        <span>{t('admin.workload')}</span>
+                        <span>{activeTasks} {t('common.tasks')}</span>
+                     </div>
+                     <div className="w-full bg-surface rounded-full h-1.5">
+                        <div className={`${workloadColor} h-1.5 rounded-full transition-all`} style={{ width: `${workloadPercentage}%` }}></div>
+                     </div>
                  </div>
-                 <div className="w-full bg-surface rounded-full h-2">
-                    <div className={`${workloadColor} h-2 rounded-full transition-all`} style={{ width: `${workloadPercentage}%` }}></div>
+                 <div>
+                     <div className="flex justify-between text-xs text-text-secondary mb-1">
+                        <span>{t('modals.reliability')}</span>
+                        <span>{reliabilityScore}%</span>
+                     </div>
+                     <div className="w-full bg-surface rounded-full h-1.5">
+                        <div className={`${reliabilityColor} h-1.5 rounded-full transition-all`} style={{ width: `${reliabilityScore}%` }}></div>
+                     </div>
                  </div>
             </div>
         </div>
@@ -109,17 +136,22 @@ const AppAdminPanel: React.FC = () => {
     const [newUserRole, setNewUserRole] = useState<Role>(Role.Member);
     const [filterRole, setFilterRole] = useState<Role | 'all'>('all');
     const [filterTeam, setFilterTeam] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const adminCount = useMemo(() => users.filter(u => u.role === Role.Admin).length, [users]);
     const teams = useMemo(() => Array.from(new Set(users.map(u => u.team).filter(Boolean))), [users]);
 
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
+            const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                  u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  u.title.toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return false;
             if (filterRole !== 'all' && u.role !== filterRole) return false;
             if (filterTeam !== 'all' && u.team !== filterTeam) return false;
             return true;
         });
-    }, [users, filterRole, filterTeam]);
+    }, [users, filterRole, filterTeam, searchTerm]);
 
     const handleAddUser = () => {
         if (newUserName.trim() === '') {
@@ -138,24 +170,38 @@ const AppAdminPanel: React.FC = () => {
 
                 {/* Left Column: User Management */}
                 <div className="lg:col-span-2 space-y-4">
-                    {/* Filters */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                         <select 
-                            value={filterRole}
-                            onChange={(e) => setFilterRole(e.target.value as Role | 'all')}
-                            className="bg-surface border border-border rounded-md px-3 py-2 text-sm focus:ring-primary focus:border-primary"
-                         >
-                            <option value="all">{t('modals.filterByRole')}</option>
-                            {Object.values(Role).map(r => <option key={r} value={r}>{t(`common.${r.toLowerCase()}`)}</option>)}
-                         </select>
-                         <select 
-                            value={filterTeam}
-                            onChange={(e) => setFilterTeam(e.target.value)}
-                            className="bg-surface border border-border rounded-md px-3 py-2 text-sm focus:ring-primary focus:border-primary"
-                         >
-                            <option value="all">{t('modals.filterByTeam')}</option>
-                            {teams.map(team => <option key={team} value={team}>{team}</option>)}
-                         </select>
+                    {/* Filters & Search */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center bg-surface p-2 rounded-lg border border-border">
+                        <div className="relative flex-grow">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-text-secondary">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </span>
+                            <input 
+                                type="text" 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder={t('modals.searchUsers')}
+                                className="w-full bg-secondary border-none rounded-md py-2 pl-9 pr-2 text-sm focus:ring-2 focus:ring-primary"
+                            />
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto">
+                             <select 
+                                value={filterRole}
+                                onChange={(e) => setFilterRole(e.target.value as Role | 'all')}
+                                className="bg-secondary border-none rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary cursor-pointer"
+                             >
+                                <option value="all">{t('modals.filterByRole')}</option>
+                                {Object.values(Role).map(r => <option key={r} value={r}>{t(`common.${r.toLowerCase()}`)}</option>)}
+                             </select>
+                             <select 
+                                value={filterTeam}
+                                onChange={(e) => setFilterTeam(e.target.value)}
+                                className="bg-secondary border-none rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary cursor-pointer"
+                             >
+                                <option value="all">{t('modals.filterByTeam')}</option>
+                                {teams.map(team => <option key={team} value={team}>{team}</option>)}
+                             </select>
+                        </div>
                     </div>
                     
                     <div className="bg-surface rounded-lg p-6 animate-fadeIn min-h-[500px]">

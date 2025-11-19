@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { User, Task, Status } from '../types';
+import { User, Task, Status, Priority } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
 import { useTranslation } from '../i18n';
 import { useAppContext } from '../contexts/AppContext';
@@ -13,7 +14,7 @@ interface UserProfileModalProps {
 }
 
 const StatBox: React.FC<{ label: string; value: number | string; color?: string }> = ({ label, value, color = 'text-text-primary' }) => (
-    <div className="bg-secondary p-4 rounded-lg text-center flex-1">
+    <div className="bg-secondary p-4 rounded-lg text-center flex-1 min-w-[120px]">
         <div className={`text-2xl font-bold ${color}`}>{value}</div>
         <div className="text-xs text-text-secondary uppercase font-semibold mt-1">{label}</div>
     </div>
@@ -53,8 +54,15 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
       const overdue = userTasks.filter(t => t.status !== Status.Done && new Date(t.dueDate) < new Date()).length;
 
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      // Priority Breakdown
+      const priorityCounts = {
+          [Priority.High]: userTasks.filter(t => t.priority === Priority.High).length,
+          [Priority.Medium]: userTasks.filter(t => t.priority === Priority.Medium).length,
+          [Priority.Low]: userTasks.filter(t => t.priority === Priority.Low).length,
+      };
       
-      return { total, completed, inProgress, overdue, completionRate, onTime };
+      return { total, completed, inProgress, overdue, completionRate, onTime, priorityCounts };
   }, [allTasks, user.id]);
 
   const userActivity = useMemo(() => {
@@ -214,7 +222,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                                 onChange={(e) => setNewSkill(e.target.value)} 
                                 onKeyDown={handleAddSkill}
                                 placeholder={t('modals.addSkill')} 
-                                className="bg-transparent text-sm focus:outline-none min-w-[100px]" 
+                                className="bg-transparent text-sm focus:outline-none min-w-[100px] p-1" 
                             />
                         </div>
                         <div className="h-px bg-border w-full"></div>
@@ -238,7 +246,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
 
                     <div className="bg-surface p-6 rounded-lg border border-border">
                         <h3 className="font-semibold text-text-primary mb-4">{t('modals.performanceOverview')}</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             <div>
                                 <div className="flex justify-between text-sm mb-1">
                                     <span className="text-text-secondary">{t('modals.completionRate')}</span>
@@ -252,6 +260,22 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onUp
                                     <span className="font-bold text-text-primary">{userStats.total > 0 ? Math.round((userStats.onTime / userStats.completed) * 100) || 0 : 0}%</span>
                                 </div>
                                 <ProgressBar value={userStats.total > 0 ? Math.round((userStats.onTime / userStats.completed) * 100) || 0 : 0} color="bg-blue-500" />
+                            </div>
+
+                            {/* Priority Breakdown */}
+                            <div className="pt-4 border-t border-border">
+                                <h4 className="text-sm font-semibold text-text-secondary mb-3">{t('modals.priorityBreakdown')}</h4>
+                                <div className="flex h-8 rounded-full overflow-hidden">
+                                    <div style={{ width: `${(userStats.priorityCounts[Priority.High] / userStats.total) * 100}%` }} className="bg-priority-high" title={`${t('common.high')}: ${userStats.priorityCounts[Priority.High]}`}></div>
+                                    <div style={{ width: `${(userStats.priorityCounts[Priority.Medium] / userStats.total) * 100}%` }} className="bg-priority-medium" title={`${t('common.medium')}: ${userStats.priorityCounts[Priority.Medium]}`}></div>
+                                    <div style={{ width: `${(userStats.priorityCounts[Priority.Low] / userStats.total) * 100}%` }} className="bg-priority-low" title={`${t('common.low')}: ${userStats.priorityCounts[Priority.Low]}`}></div>
+                                    {userStats.total === 0 && <div className="w-full bg-secondary"></div>}
+                                </div>
+                                <div className="flex justify-between mt-2 text-xs text-text-secondary">
+                                    <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-priority-high"></span>{t('common.high')}: {userStats.priorityCounts[Priority.High]}</div>
+                                    <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-priority-medium"></span>{t('common.medium')}: {userStats.priorityCounts[Priority.Medium]}</div>
+                                    <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-priority-low"></span>{t('common.low')}: {userStats.priorityCounts[Priority.Low]}</div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -3,7 +3,7 @@ import React, { createContext, useContext, useReducer, useState, useEffect, useC
 import { 
     User, Task, List, Folder, Workspace, Notification, Toast, 
     ViewType, Status, Priority, Role, Permission, UserStatus, 
-    TaskTemplate, Activity 
+    TaskTemplate, Activity, ChatChannel, ChatMessage 
 } from '../types';
 import { useTranslation } from '../i18n';
 import { generateProjectSummary } from '../services/geminiService';
@@ -29,6 +29,20 @@ const initialTasks: Task[] = [
     { id: 't2', title: 'Setup CI/CD', description: 'Configure Github Actions', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u2', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l2', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
 ];
 
+// Initial Chat Data
+const initialChannels: ChatChannel[] = [
+    { id: 'c1', name: 'General', type: 'group', participants: ['u1', 'u2', 'u3'], lastMessage: 'Welcome everyone!', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
+    { id: 'c2', name: 'Engineering', type: 'group', participants: ['u1', 'u2'], lastMessage: 'Deploying to prod...', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
+    { id: 'dm-u2', name: 'Sarah Jenkins', type: 'dm', participants: ['u1', 'u2'], lastMessage: 'Can you check this PR?', lastMessageTime: new Date(Date.now() - 1800000).toISOString(), unreadCount: 1 },
+    { id: 'dm-u3', name: 'Mike Ross', type: 'dm', participants: ['u1', 'u3'], lastMessage: 'Thanks for the update', lastMessageTime: new Date(Date.now() - 7200000).toISOString(), unreadCount: 0 },
+];
+
+const initialMessages: ChatMessage[] = [
+    { id: 'm1', channelId: 'c1', senderId: 'u1', text: 'Welcome everyone to the new platform!', timestamp: new Date(Date.now() - 86400000).toISOString() },
+    { id: 'm2', channelId: 'c2', senderId: 'u2', text: 'Hey Alex, deploying to prod in 10.', timestamp: new Date(Date.now() - 3600000).toISOString() },
+    { id: 'm3', channelId: 'dm-u2', senderId: 'u2', text: 'Can you check this PR?', timestamp: new Date(Date.now() - 1800000).toISOString() },
+];
+
 // --- State & Reducer ---
 
 interface AppState {
@@ -45,6 +59,9 @@ interface AppState {
     taskTemplates: TaskTemplate[];
     theme: 'default' | 'forest' | 'ocean' | 'sunset' | 'rose' | 'slate';
     colorScheme: 'light' | 'dark';
+    chatChannels: ChatChannel[];
+    chatMessages: ChatMessage[];
+    activeChatId: string | null;
 }
 
 type Action =
@@ -76,7 +93,9 @@ type Action =
     | { type: 'SET_THEME'; payload: any }
     | { type: 'SET_COLOR_SCHEME'; payload: any }
     | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
-    | { type: 'REORDER_SIDEBAR'; payload: { folders: Folder[], lists: List[] } };
+    | { type: 'REORDER_SIDEBAR'; payload: { folders: Folder[], lists: List[] } }
+    | { type: 'SEND_MESSAGE'; payload: ChatMessage }
+    | { type: 'SET_ACTIVE_CHAT'; payload: string | null };
 
 const appReducer = (state: AppState, action: Action): AppState => {
     switch (action.type) {
@@ -109,6 +128,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'SET_COLOR_SCHEME': return { ...state, colorScheme: action.payload };
         case 'ADD_TEMPLATE': return { ...state, taskTemplates: [...state.taskTemplates, action.payload] };
         case 'REORDER_SIDEBAR': return { ...state, folders: action.payload.folders, lists: action.payload.lists };
+        case 'SEND_MESSAGE': 
+            return { 
+                ...state, 
+                chatMessages: [...state.chatMessages, action.payload],
+                chatChannels: state.chatChannels.map(c => c.id === action.payload.channelId ? { ...c, lastMessage: action.payload.text, lastMessageTime: action.payload.timestamp } : c)
+            };
+        case 'SET_ACTIVE_CHAT': return { ...state, activeChatId: action.payload };
         default: return state;
     }
 };
@@ -170,6 +196,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         taskTemplates: [],
         theme: 'default',
         colorScheme: 'dark',
+        chatChannels: initialChannels,
+        chatMessages: initialMessages,
+        activeChatId: initialChannels[0].id,
     });
 
     // --- UI State ---
@@ -497,6 +526,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addToast({ message: t('toasts.templateSaved', { name }), type: 'success' });
     };
 
+    const handleSendMessage = (channelId: string, text: string) => {
+        if (!state.currentUser || !text.trim()) return;
+        
+        const newMessage: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            channelId,
+            senderId: state.currentUser.id,
+            text: text.trim(),
+            timestamp: new Date().toISOString()
+        };
+        dispatch({ type: 'SEND_MESSAGE', payload: newMessage });
+    };
+
+    const handleSetActiveChat = (chatId: string) => {
+        dispatch({ type: 'SET_ACTIVE_CHAT', payload: chatId });
+        // Here we would normally mark messages as read
+    };
+
     const handleAIAction = useCallback((name: string, args: any) => {
         switch (name) {
             case 'create_task': {
@@ -616,6 +663,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleGenerateSummary,
         handleSaveTemplate,
         handleAIAction,
+        handleSendMessage,
+        handleSetActiveChat,
         
         setActiveView,
         setCurrentView,

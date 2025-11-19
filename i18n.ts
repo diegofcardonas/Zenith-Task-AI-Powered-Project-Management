@@ -83,6 +83,13 @@ const es = {
     "workspace": "Espacio de Trabajo",
     "noFavorites": "Sin favoritos aún"
   },
+  "chat": {
+    "teamChat": "Chat de Equipo",
+    "channels": "Canales",
+    "directMessages": "Mensajes Directos",
+    "placeholder": "Escribe un mensaje...",
+    "selectToStart": "Selecciona un chat para comenzar"
+  },
   "header": {
     "adminDashboard": "Dashboard de Admin",
     "appAdmin": "Consola de Administración",
@@ -583,6 +590,13 @@ const en = {
     "favorites": "Favorites",
     "workspace": "Workspace",
     "noFavorites": "No favorites yet"
+  },
+  "chat": {
+    "teamChat": "Team Chat",
+    "channels": "Channels",
+    "directMessages": "Direct Messages",
+    "placeholder": "Type a message...",
+    "selectToStart": "Select a chat to start messaging"
   },
   "header": {
     "adminDashboard": "Admin Dashboard",

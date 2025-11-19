@@ -11,6 +11,7 @@ import ProjectModal from './components/ProjectModal';
 import BlockingTasksModal from './components/BlockingTasksModal';
 import AuthPage from './components/AuthPage';
 import MyTasksView from './components/MyTasksView';
+import TeamChatView from './components/TeamChatView';
 import CommandPalette from './components/CommandPalette';
 import AISummaryModal from './components/AISummaryModal';
 import AIChatbot from './components/AIChatbot';
@@ -192,6 +193,8 @@ const App: React.FC = () => {
           <AdminDashboard />
         ) : activeView === 'my_tasks' ? (
           <MyTasksView />
+        ) : activeView === 'chat' ? (
+          <TeamChatView />
         ) : (
           <MainContent />
         )}

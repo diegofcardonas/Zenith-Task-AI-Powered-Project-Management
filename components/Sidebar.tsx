@@ -174,6 +174,7 @@ const Sidebar: React.FC = () => {
         activeView,
         isSidebarOpen,
         isAdminPanelOpen,
+        chatChannels
     } = state;
     const {
         handleSelectWorkspace,
@@ -204,6 +205,9 @@ const Sidebar: React.FC = () => {
     const [dropTarget, setDropTarget] = useState<{ targetId: string; position: 'top' | 'bottom' | 'middle' } | null>(null);
 
     const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
+    
+    // Calculate total unread messages
+    const totalUnreadChat = useMemo(() => chatChannels.reduce((acc, c) => acc + (c.unreadCount || 0), 0), [chatChannels]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -428,6 +432,13 @@ const Sidebar: React.FC = () => {
                                 label={t('sidebar.myTasks')}
                                 isActive={activeView === 'my_tasks'}
                                 onClick={() => handleNavigation(() => { setActiveView('my_tasks'); setSelectedListId(null); })}
+                            />
+                            <SidebarItem 
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" /></svg>}
+                                label={t('chat.teamChat')}
+                                isActive={activeView === 'chat'}
+                                onClick={() => handleNavigation(() => { setActiveView('chat'); setSelectedListId(null); })}
+                                badge={totalUnreadChat > 0 ? totalUnreadChat : undefined}
                             />
                             {permissions.has(Permission.VIEW_DASHBOARD) && (
                                 <SidebarItem 

@@ -102,6 +102,7 @@ export interface Activity {
   user: User;
   text: string;
   timestamp: string;
+  parentId?: string;
 }
 
 export interface Task {
@@ -150,4 +151,24 @@ export interface TaskTemplate {
     id: string;
     name: string;
     taskData: Partial<Task>;
+}
+
+// Chat Types
+export interface ChatMessage {
+    id: string;
+    channelId: string;
+    senderId: string;
+    text: string;
+    timestamp: string;
+}
+
+export interface ChatChannel {
+    id: string;
+    name: string; // Group name or User Name for DM
+    type: 'group' | 'dm';
+    participants: string[]; // User IDs
+    lastMessage?: string;
+    lastMessageTime?: string;
+    unreadCount?: number;
+    avatar?: string; // Specific avatar for group or user avatar for DM
 }

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { User, Role, Permission } from '../../types';
+import { User, Role, Task, Status } from '../../types';
 import Header from '../Header';
 import AvatarWithStatus from '../AvatarWithStatus';
 import { useAppContext } from '../../contexts/AppContext';
@@ -22,10 +22,82 @@ const RoleDescription: React.FC<{ role: Role, description: string }> = ({ role, 
     );
 };
 
+const UserCard: React.FC<{ 
+    user: User, 
+    tasks: Task[], 
+    currentUser: User, 
+    onEdit: () => void, 
+    onDelete: () => void,
+    onUpdateRole: (role: Role) => void,
+    isLastAdmin: boolean 
+}> = ({ user, tasks, currentUser, onEdit, onDelete, onUpdateRole, isLastAdmin }) => {
+    const { t } = useTranslation();
+    const activeTasks = tasks.filter(t => t.assigneeId === user.id && t.status !== Status.Done).length;
+    const totalTasks = tasks.filter(t => t.assigneeId === user.id).length;
+    const maxCapacity = 10; // Arbitrary capacity for visualization
+    const workloadPercentage = Math.min((activeTasks / maxCapacity) * 100, 100);
+    
+    const workloadColor = workloadPercentage > 80 ? 'bg-red-500' : workloadPercentage > 50 ? 'bg-yellow-500' : 'bg-green-500';
+
+    return (
+        <div className="bg-secondary p-4 rounded-lg border border-border hover:border-primary/50 transition-all">
+            <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                    <AvatarWithStatus user={user} className="w-12 h-12" />
+                    <div>
+                        <div className="font-bold text-text-primary">{user.name}</div>
+                        <div className="text-xs text-text-secondary">{user.email}</div>
+                        <div className="text-xs text-primary mt-0.5">{user.title}</div>
+                    </div>
+                </div>
+                {user.id !== currentUser.id && (
+                    <div className="flex gap-1">
+                        <button onClick={onEdit} className="p-1.5 text-text-secondary hover:text-blue-400 rounded-md hover:bg-blue-500/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
+                        </button>
+                         <button onClick={onDelete} disabled={isLastAdmin} className="p-1.5 text-text-secondary hover:text-red-400 rounded-md hover:bg-red-500/10 disabled:opacity-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+                        </button>
+                    </div>
+                )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                <div>
+                    <div className="text-xs text-text-secondary">{t('admin.role')}</div>
+                     <select
+                        value={user.role}
+                        onChange={(e) => onUpdateRole(e.target.value as Role)}
+                        disabled={user.id === currentUser.id || isLastAdmin}
+                        className="w-full mt-1 bg-surface border border-border rounded px-2 py-1 text-xs focus:ring-primary focus:border-primary disabled:opacity-50"
+                    >
+                        {Object.values(Role).map((role) => <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <div className="text-xs text-text-secondary">{t('admin.team')}</div>
+                    <div className="font-medium text-text-primary mt-1 truncate">{user.team}</div>
+                </div>
+            </div>
+            
+            <div>
+                 <div className="flex justify-between text-xs text-text-secondary mb-1">
+                    <span>{t('admin.workload')}</span>
+                    <span>{activeTasks} / {maxCapacity}</span>
+                 </div>
+                 <div className="w-full bg-surface rounded-full h-2">
+                    <div className={`${workloadColor} h-2 rounded-full transition-all`} style={{ width: `${workloadPercentage}%` }}></div>
+                 </div>
+            </div>
+        </div>
+    )
+}
+
+
 const AppAdminPanel: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions, permissions } = useAppContext();
-    const { users, currentUser } = state;
+    const { state, actions } = useAppContext();
+    const { users, currentUser, tasks } = state;
     const { 
         handleUpdateUserRole, 
         handleDeleteUser, 
@@ -35,8 +107,19 @@ const AppAdminPanel: React.FC = () => {
 
     const [newUserName, setNewUserName] = useState('');
     const [newUserRole, setNewUserRole] = useState<Role>(Role.Member);
+    const [filterRole, setFilterRole] = useState<Role | 'all'>('all');
+    const [filterTeam, setFilterTeam] = useState('all');
 
     const adminCount = useMemo(() => users.filter(u => u.role === Role.Admin).length, [users]);
+    const teams = useMemo(() => Array.from(new Set(users.map(u => u.team).filter(Boolean))), [users]);
+
+    const filteredUsers = useMemo(() => {
+        return users.filter(u => {
+            if (filterRole !== 'all' && u.role !== filterRole) return false;
+            if (filterTeam !== 'all' && u.team !== filterTeam) return false;
+            return true;
+        });
+    }, [users, filterRole, filterTeam]);
 
     const handleAddUser = () => {
         if (newUserName.trim() === '') {
@@ -54,60 +137,55 @@ const AppAdminPanel: React.FC = () => {
             <div className="flex-grow p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Left Column: User Management */}
-                <div className="lg:col-span-2 bg-surface rounded-lg p-6 animate-fadeIn h-fit">
-                    <h2 className="text-xl font-semibold mb-4">{t('admin.manageUsers')}</h2>
-                    <div className="space-y-4">
-                        {users.map(user => {
-                            const isLastAdmin = user.role === Role.Admin && adminCount <= 1;
-                            return (
-                                <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-secondary p-3 rounded-lg gap-3">
-                                    <div className="flex items-center flex-grow">
-                                        <AvatarWithStatus user={user} className="w-10 h-10" />
-                                        <div className="ml-4 min-w-0">
-                                            <p className="font-semibold text-text-primary truncate">{user.name}</p>
-                                            <p className="text-sm text-text-secondary truncate">{user.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                        <select
-                                            value={user.role}
-                                            onChange={(e) => handleUpdateUserRole(user.id, e.target.value as Role)}
-                                            disabled={user.id === currentUser!.id || isLastAdmin}
-                                            className="bg-surface border border-border rounded-md px-2 py-1 text-sm focus:ring-primary focus:border-primary disabled:opacity-50"
-                                            title={isLastAdmin ? t('tooltips.lastAdminRole') : ''}
-                                        >
-                                            {Object.values(Role).map((role) => <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>)}
-                                        </select>
-                                        {user.id !== currentUser!.id && (
-                                            <>
-                                                <button
-                                                    onClick={() => setEditingUserId(user.id)}
-                                                    className="p-2 text-text-secondary hover:text-blue-400 rounded-full hover:bg-blue-500/10 transition-colors"
-                                                    aria-label={t('tooltips.editUser', { name: user.name })}
-                                                    title={t('tooltips.editUser', { name: user.name })}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                                        <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteUser(user.id)}
-                                                    disabled={isLastAdmin}
-                                                    className="p-2 text-text-secondary hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    title={isLastAdmin ? t('tooltips.lastAdminDelete') : t('tooltips.deleteUser', { name: user.name })}
-                                                    aria-label={t('tooltips.deleteUser', { name: user.name })}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                <div className="lg:col-span-2 space-y-4">
+                    {/* Filters */}
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                         <select 
+                            value={filterRole}
+                            onChange={(e) => setFilterRole(e.target.value as Role | 'all')}
+                            className="bg-surface border border-border rounded-md px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                         >
+                            <option value="all">{t('modals.filterByRole')}</option>
+                            {Object.values(Role).map(r => <option key={r} value={r}>{t(`common.${r.toLowerCase()}`)}</option>)}
+                         </select>
+                         <select 
+                            value={filterTeam}
+                            onChange={(e) => setFilterTeam(e.target.value)}
+                            className="bg-surface border border-border rounded-md px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                         >
+                            <option value="all">{t('modals.filterByTeam')}</option>
+                            {teams.map(team => <option key={team} value={team}>{team}</option>)}
+                         </select>
+                    </div>
+                    
+                    <div className="bg-surface rounded-lg p-6 animate-fadeIn min-h-[500px]">
+                        <h2 className="text-xl font-semibold mb-4 flex justify-between items-center">
+                            {t('admin.manageUsers')}
+                            <span className="text-sm font-normal text-text-secondary bg-secondary px-2 py-1 rounded-full">{filteredUsers.length}</span>
+                        </h2>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filteredUsers.map(user => {
+                                const isLastAdmin = user.role === Role.Admin && adminCount <= 1;
+                                return (
+                                    <UserCard 
+                                        key={user.id}
+                                        user={user}
+                                        tasks={tasks}
+                                        currentUser={currentUser}
+                                        onEdit={() => setEditingUserId(user.id)}
+                                        onDelete={() => handleDeleteUser(user.id)}
+                                        onUpdateRole={(role) => handleUpdateUserRole(user.id, role)}
+                                        isLastAdmin={isLastAdmin}
+                                    />
+                                );
+                            })}
+                             {filteredUsers.length === 0 && (
+                                <div className="col-span-full text-center p-8 text-text-secondary italic">
+                                    {t('admin.noUsersWithFilter')}
                                 </div>
-                            );
-                        })}
+                             )}
+                        </div>
                     </div>
                 </div>
 

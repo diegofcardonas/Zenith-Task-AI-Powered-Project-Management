@@ -13,9 +13,9 @@ const initialWorkspaces: Workspace[] = [
 ];
 
 const initialUsers: User[] = [
-    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'Product Manager', email: 'alex@example.com', team: 'Product', bio: 'Loves building things.', status: UserStatus.Online },
-    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Member, title: 'Frontend Dev', email: 'sarah@example.com', team: 'Engineering', bio: 'React enthusiast.', status: UserStatus.Busy },
-    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Viewer, title: 'Stakeholder', email: 'mike@example.com', team: 'Marketing', bio: 'Keeping an eye on progress.', status: UserStatus.Offline },
+    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'Product Manager', email: 'alex@example.com', team: 'Product', bio: 'Loves building things.', status: UserStatus.Online, skills: ['Product Management', 'Strategy', 'Agile'] },
+    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Member, title: 'Frontend Dev', email: 'sarah@example.com', team: 'Engineering', bio: 'React enthusiast.', status: UserStatus.Busy, skills: ['React', 'TypeScript', 'Tailwind CSS'] },
+    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Viewer, title: 'Stakeholder', email: 'mike@example.com', team: 'Marketing', bio: 'Keeping an eye on progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO', 'Analytics'] },
 ];
 
 const initialLists: List[] = [
@@ -278,7 +278,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             title: 'New Member',
             team: 'General',
             bio: '',
-            status: UserStatus.Online
+            status: UserStatus.Online,
+            skills: []
         };
         dispatch({ type: 'ADD_USER', payload: newUser });
         dispatch({ type: 'SET_USER', payload: newUser });
@@ -429,7 +430,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             team: 'General',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
             bio: '',
-            status: UserStatus.Offline
+            status: UserStatus.Offline,
+            skills: []
         };
         dispatch({ type: 'ADD_USER', payload: newUser });
         addToast({ message: t('toasts.userCreated', { name }), type: 'success' });

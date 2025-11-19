@@ -127,7 +127,7 @@ const es = {
     "manageRolesNonAdmin": "Solo los administradores pueden gestionar los roles.",
     "done": "Hecho",
     "editYourProfile": "Editar Tu Perfil",
-    "editProfileOf": "Editar Perfil de {{name}}",
+    "editProfileOf": "Perfil: {{name}}",
     "jobTitle": "Cargo",
     "email": "Correo",
     "team": "Equipo",
@@ -206,7 +206,22 @@ const es = {
     "searchingForSuggestions": "Buscando sugerencias de IA...",
     "suggesting": "Sugiriendo...",
     "suggestReplies": "✨ Sugerir Respuestas",
-    "thisProject": "este proyecto"
+    "thisProject": "este proyecto",
+    "profile": "Perfil",
+    "performance": "Rendimiento",
+    "activity": "Actividad",
+    "skills": "Habilidades",
+    "addSkill": "Añadir habilidad...",
+    "tasksCompleted": "Tareas Completadas",
+    "onTimeCompletion": "A Tiempo",
+    "overdueTasks": "Atrasadas",
+    "totalWorkload": "Carga Total",
+    "completionRate": "Tasa de Finalización",
+    "performanceOverview": "Resumen de Rendimiento",
+    "noActivity": "No hay actividad reciente para mostrar.",
+    "filterByRole": "Filtrar por Rol",
+    "filterByTeam": "Filtrar por Equipo",
+    "filterByStatus": "Filtrar por Estado"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -292,7 +307,8 @@ const es = {
     "adminDescription": "Control total. Puede gestionar espacios de trabajo, facturación y todos los miembros.",
     "memberDescription": "Puede crear y gestionar proyectos, tareas y carpetas. No puede gestionar miembros ni la configuración del espacio de trabajo.",
     "viewerDescription": "Puede ver y comentar en proyectos y tareas, pero no puede crear ni editar contenido.",
-    "guestDescription": "Acceso limitado de solo lectura a proyectos o tareas específicas a las que se les invite."
+    "guestDescription": "Acceso limitado de solo lectura a proyectos o tareas específicas a las que se les invite.",
+    "workload": "Carga"
   },
   "tooltips": {
     "deleteSubtask": "Eliminar subtarea",
@@ -604,7 +620,22 @@ const en = {
     "searchingForSuggestions": "Searching for AI suggestions...",
     "suggesting": "Suggesting...",
     "suggestReplies": "✨ Suggest Replies",
-    "thisProject": "this project"
+    "thisProject": "this project",
+    "profile": "Profile",
+    "performance": "Performance",
+    "activity": "Activity",
+    "skills": "Skills",
+    "addSkill": "Add skill...",
+    "tasksCompleted": "Tasks Completed",
+    "onTimeCompletion": "On Time",
+    "overdueTasks": "Overdue",
+    "totalWorkload": "Total Workload",
+    "completionRate": "Completion Rate",
+    "performanceOverview": "Performance Overview",
+    "noActivity": "No recent activity to show.",
+    "filterByRole": "Filter by Role",
+    "filterByTeam": "Filter by Team",
+    "filterByStatus": "Filter by Status"
   },
   "notifications": {
     "title": "Notifications",
@@ -690,7 +721,8 @@ const en = {
     "adminDescription": "Full control. Can manage workspaces, billing, and all members.",
     "memberDescription": "Can create and manage projects, tasks, and folders. Cannot manage members or workspace settings.",
     "viewerDescription": "Can view and comment on projects and tasks, but cannot create or edit content.",
-    "guestDescription": "Limited, read-only access to specific projects or tasks they are invited to."
+    "guestDescription": "Limited, read-only access to specific projects or tasks they are invited to.",
+    "workload": "Workload"
   },
   "tooltips": {
     "deleteSubtask": "Delete subtask",
@@ -797,92 +829,69 @@ const en = {
   }
 };
 
-const resources = {
-  es: { translation: es },
-  en: { translation: en },
-};
+class I18nService {
+    language: 'es' | 'en';
+    listeners: Set<() => void>;
+    translations: any;
 
-type Language = 'es' | 'en';
-
-let currentLanguage: Language = (localStorage.getItem('language') as Language) || 'es';
-const listeners: Set<() => void> = new Set();
-
-const getNested = (obj: any, path: string): string | undefined => {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-};
-
-// Define a more specific type for the options parameter to improve type safety
-type I18nOptions = {
-    defaultValue?: string;
-    count?: number;
-    [key: string]: any;
-};
-
-export const i18n = {
-  get language(): Language {
-    return currentLanguage;
-  },
-
-  changeLanguage: (lang: Language) => {
-    if (lang === currentLanguage) return;
-    currentLanguage = lang;
-    localStorage.setItem('language', lang);
-    listeners.forEach(listener => listener());
-  },
-
-  subscribe: (listener: () => void): (() => void) => {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  },
-
-  t: (key: string, options?: I18nOptions): string => {
-    const langResources = resources[currentLanguage]?.translation;
-    let translation: string | undefined;
-
-    // Handle pluralization first if count is provided
-    if (options && typeof options.count !== 'undefined' && options.count !== 1) {
-        const pluralKey = `${key}_plural`;
-        translation = getNested(langResources, pluralKey) || getNested(resources.en.translation, pluralKey);
-    }
-
-    // If not plural or plural key not found, try singular key
-    if (typeof translation !== 'string') {
-        translation = getNested(langResources, key) || getNested(resources.en.translation, key);
-    }
-    
-    // If still not found, fallback to defaultValue or key
-    if (typeof translation !== 'string') {
-        console.warn(`Translation key '${key}' not found for language '${currentLanguage}'.`);
-        // FIX: Use optional chaining to safely access defaultValue
-        return options?.defaultValue || key;
-    }
-
-    if (options) {
-      Object.keys(options).forEach(optKey => {
-        if (optKey !== 'defaultValue') {
-            const regex = new RegExp(`{{${optKey}}}`, 'g');
-            translation = translation!.replace(regex, String(options[optKey]));
+    constructor() {
+        this.language = 'es';
+        this.listeners = new Set();
+        this.translations = { es, en };
+        if (typeof window !== 'undefined') {
+            const savedLang = localStorage.getItem('language') as 'es' | 'en';
+            if (savedLang && (savedLang === 'es' || savedLang === 'en')) {
+                this.language = savedLang;
+            }
         }
-      });
     }
 
-    return translation;
-  }
-};
+    changeLanguage(lang: 'es' | 'en') {
+        this.language = lang;
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('language', lang);
+        }
+        this.notify();
+    }
+
+    t(key: string, options?: any): string {
+        const keys = key.split('.');
+        let value = this.translations[this.language];
+        
+        for (const k of keys) {
+            if (value === undefined) return key;
+            value = value[k];
+        }
+        
+        if (typeof value !== 'string') return key;
+
+        if (options) {
+             return value.replace(/\{\{(\w+)\}\}/g, (_: string, match: string) => {
+                return options[match] !== undefined ? String(options[match]) : `{{${match}}}`;
+            });
+        }
+
+        return value;
+    }
+
+    subscribe(listener: () => void) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    notify() {
+        this.listeners.forEach(l => l());
+    }
+}
+
+export const i18n = new I18nService();
 
 export const useTranslation = () => {
-    const [, setTick] = useState(0);
+    const [lang, setLang] = useState(i18n.language);
 
     useEffect(() => {
-        const forceUpdate = () => setTick(tick => tick + 1);
-        const unsubscribe = i18n.subscribe(forceUpdate);
-        return unsubscribe;
+        return i18n.subscribe(() => setLang(i18n.language));
     }, []);
 
-    return {
-        t: i18n.t,
-        i18n,
-    };
+    return { t: (key: string, options?: any) => i18n.t(key, options), i18n };
 };

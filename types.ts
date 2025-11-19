@@ -72,6 +72,7 @@ export interface User {
   team: string;
   bio: string;
   status: UserStatus;
+  skills: string[];
 }
 
 export interface Comment {

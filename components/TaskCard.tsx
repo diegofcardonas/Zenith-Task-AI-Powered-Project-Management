@@ -69,11 +69,14 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
   const { i18n, t } = useTranslation();
-  const { permissions } = useAppContext();
+  const { permissions, state } = useAppContext();
+  const { lists, selectedListId } = state;
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   
   const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
   const canDelete = permissions.has(Permission.DELETE_TASKS);
+
+  const projectList = lists.find(l => l.id === task.listId);
 
   return (
     <div
@@ -104,6 +107,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
         
         <div className="flex justify-between items-start mb-1">
              <PriorityBadge priority={task.priority} />
+             {!selectedListId && projectList && (
+                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
+                     {projectList.name}
+                 </span>
+             )}
         </div>
 
       <h4 className="font-semibold text-text-primary mb-3 text-sm leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">{task.title}</h4>

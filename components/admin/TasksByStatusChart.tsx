@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Task, Status } from '../../types';
 import { useTranslation } from '../../i18n';
@@ -30,7 +31,7 @@ const TasksByStatusChart: React.FC<TasksByStatusChartProps> = ({ tasks, onStatus
   
   const STATUS_CONFIG = useMemo(() => ({
     [Status.Todo]: { label: t('common.todo'), color: 'text-status-todo', hex: '#60a5fa' },
-    [Status.InProgress]: { label: t('common.inProgress'), color: 'text-status-inprogress', hex: '#fbbf24' },
+    [Status.InProgress]: { label: t('common.inprogress'), color: 'text-status-inprogress', hex: '#fbbf24' },
     [Status.Done]: { label: t('common.done'), color: 'text-status-done', hex: '#4ade80' },
   }), [t]);
 

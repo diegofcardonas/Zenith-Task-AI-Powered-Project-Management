@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Task, User, Status, Permission } from '../types';
 import { generateRiskAnalysis } from '../services/geminiService';
@@ -8,7 +9,7 @@ const TasksByStatusChart: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
     const { t } = useTranslation();
     const STATUS_CONFIG = {
         [Status.Todo]: { label: t('common.todo'), color: 'bg-status-todo' },
-        [Status.InProgress]: { label: t('common.inProgress'), color: 'bg-status-inprogress' },
+        [Status.InProgress]: { label: t('common.inprogress'), color: 'bg-status-inprogress' },
         [Status.Done]: { label: t('common.done'), color: 'bg-status-done' },
     };
     const data = useMemo(() => {

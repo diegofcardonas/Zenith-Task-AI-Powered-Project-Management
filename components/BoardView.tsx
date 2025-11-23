@@ -18,7 +18,7 @@ const BoardView: React.FC = () => {
 
   const STATUS_CONFIG = useMemo(() => ({
     [Status.Todo]: { title: t('board.todo'), color: 'bg-blue-500', border: 'border-blue-500/20' },
-    [Status.InProgress]: { title: t('board.inProgress'), color: 'bg-amber-500', border: 'border-amber-500/20' },
+    [Status.InProgress]: { title: t('board.inprogress'), color: 'bg-amber-500', border: 'border-amber-500/20' },
     [Status.Done]: { title: t('board.done'), color: 'bg-emerald-500', border: 'border-emerald-500/20' },
   }), [t]);
 

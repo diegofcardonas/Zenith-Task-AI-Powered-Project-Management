@@ -406,6 +406,12 @@ const Sidebar: React.FC = () => {
                                 onClick={() => handleNavigation(() => { setActiveView('my_tasks'); setSelectedListId(null); })}
                             />
                             <SidebarItem 
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" /></svg>}
+                                label={t('sidebar.allProjects')}
+                                isActive={selectedListId === null && activeView !== 'my_tasks' && activeView !== 'dashboard'}
+                                onClick={() => handleNavigation(() => { setSelectedListId(null); setActiveView('board'); })}
+                            />
+                            <SidebarItem 
                                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" /></svg>}
                                 label={t('chat.teamChat')}
                                 isActive={isChatOpen}

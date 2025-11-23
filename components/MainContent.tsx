@@ -99,14 +99,17 @@ const MainContent: React.FC = () => {
     }
   }
 
+  // If selectedList is null, we show "All Projects"
+  const title = selectedList ? selectedList.name : t('sidebar.allProjects');
+
   return (
     <main className="flex-grow flex flex-col h-full overflow-y-auto bg-[#0f172a] relative">
        {/* Subtle Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/30 via-[#0f172a] to-[#0f172a] pointer-events-none"></div>
       
       <div className="relative z-10 flex flex-col h-full">
-          <Header title={selectedList?.name || t('sidebar.projects')} />
-          {selectedList ? (
+          <Header title={title} />
+          
             <>
             <div className="flex-shrink-0 p-4 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#0f172a]/50 backdrop-blur-sm sticky top-[64px] z-20">
                 {/* Scrollable View Switcher for Mobile */}
@@ -199,19 +202,7 @@ const MainContent: React.FC = () => {
                 {renderCurrentView()}
             </div>
             </>
-            ) : (
-            <div className="flex-grow p-8 flex items-center justify-center">
-                <div className="text-center p-10 rounded-2xl border border-white/5 bg-surface/30 backdrop-blur-sm">
-                    <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">{t('mainContent.noProjectSelected')}</h2>
-                    <p className="mt-2 text-text-secondary max-w-sm mx-auto">{t('mainContent.noProjectSelectedMessage')}</p>
-                </div>
-            </div>
-          )}
+          
           <footer className="p-4 text-center text-xs text-text-secondary/50 border-t border-white/5 mt-auto flex-shrink-0">
               {t('footer.copyright', { year: new Date().getFullYear() })}
           </footer>

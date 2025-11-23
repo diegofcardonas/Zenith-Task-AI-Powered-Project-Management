@@ -149,7 +149,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
                 </span>
             </div>
             {!selectedListId && projectList && (
-                <span className={`text-[10px] mt-1 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')}`}>
+                <span className={`text-[10px] mt-1 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10`}>
                     {projectList.name}
                 </span>
             )}

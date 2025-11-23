@@ -31,6 +31,26 @@ const PriorityBadge: React.FC<{ priority: Priority }> = ({ priority }) => {
     );
 };
 
+const StatusBadge: React.FC<{ status: Status; onClick: (e: React.MouseEvent) => void; editable: boolean }> = ({ status, onClick, editable }) => {
+    const { t } = useTranslation();
+    const statusConfig = {
+        [Status.Todo]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        [Status.InProgress]: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        [Status.Done]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    };
+
+    return (
+        <button 
+            onClick={onClick}
+            disabled={!editable}
+            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${statusConfig[status]} uppercase tracking-wide transition-all ${editable ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'}`}
+            title={editable ? t('tooltips.changeStatus') : ''}
+        >
+            {t(`common.${status.replace(/\s+/g, '').toLowerCase()}`)}
+        </button>
+    );
+};
+
 const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingClick: () => void }> = ({ task, allTasks, onBlockingClick }) => {
   const { t } = useTranslation();
   const isBlocked = (task.dependsOn || []).some(depId => {
@@ -69,14 +89,28 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
   const { i18n, t } = useTranslation();
-  const { permissions, state } = useAppContext();
+  const { permissions, state, actions } = useAppContext();
   const { lists, selectedListId } = state;
+  const { handleUpdateTask } = actions;
+
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   
   const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
   const canDelete = permissions.has(Permission.DELETE_TASKS);
+  const canEdit = permissions.has(Permission.EDIT_TASKS);
 
   const projectList = lists.find(l => l.id === task.listId);
+
+  const handleStatusClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!canEdit) return;
+      const nextStatus = {
+          [Status.Todo]: Status.InProgress,
+          [Status.InProgress]: Status.Done,
+          [Status.Done]: Status.Todo
+      };
+      handleUpdateTask({ ...task, status: nextStatus[task.status] });
+  };
 
   return (
     <div
@@ -84,10 +118,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onSelectTask()}
       className={`
-        bg-surface rounded-xl p-5 shadow-sm border border-white/5
+        bg-surface rounded-xl p-4 shadow-sm border border-white/5
         transition-all duration-300 transform 
         hover:-translate-y-1 hover:shadow-card hover:border-white/10 hover:ring-1 hover:ring-white/10
-        relative group w-full flex flex-col gap-3
+        relative group w-full flex flex-col gap-2
         ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
       `}
       aria-label={t('tooltips.openTask', { title: task.title })}
@@ -105,16 +139,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
             </button>
         )}
         
-        <div className="flex justify-between items-start mb-1">
-             <PriorityBadge priority={task.priority} />
-             {!selectedListId && projectList && (
-                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
-                     {projectList.name}
-                 </span>
-             )}
+        <div className="flex justify-between items-center mb-1">
+             <StatusBadge status={task.status} onClick={handleStatusClick} editable={canEdit} />
+             <div className="flex gap-2">
+                <PriorityBadge priority={task.priority} />
+                {!selectedListId && projectList && (
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
+                        {projectList.name}
+                    </span>
+                )}
+             </div>
         </div>
 
-      <h4 className="font-semibold text-text-primary mb-3 text-sm leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">{task.title}</h4>
+      <h4 className="font-semibold text-text-primary mb-1 text-sm leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">{task.title}</h4>
       
       <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
           <div className="flex items-center gap-3">
@@ -124,10 +161,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
                     className="rounded-full focus:outline-none ring-2 ring-transparent hover:ring-primary/50 transition-all"
                     title={t('tooltips.viewProfile', { name: user.name })}
                 >
-                    <AvatarWithStatus user={user} className="w-7 h-7" />
+                    <AvatarWithStatus user={user} className="w-6 h-6" />
                 </button>
                 ) : (
-                <div className="w-7 h-7 rounded-full bg-secondary border border-dashed border-text-secondary/50 flex items-center justify-center text-[10px] font-bold text-text-secondary" title={t('tooltips.unassigned')}>
+                <div className="w-6 h-6 rounded-full bg-secondary border border-dashed border-text-secondary/50 flex items-center justify-center text-[10px] font-bold text-text-secondary" title={t('tooltips.unassigned')}>
                     ?
                 </div>
                 )}
@@ -148,18 +185,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
             {task.subtasks.length > 0 && (
                  <div className="flex items-center gap-1.5" title={t('tooltips.subtasks')}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                     </svg>
-                    <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}</span>
+                    <span>{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
                  </div>
             )}
-             {task.comments.length > 0 && (
-                 <div className="flex items-center gap-1.5">
+            {task.comments.length > 0 && (
+                <div className="flex items-center gap-1.5" title={t('modals.comments')}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                         <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
                     </svg>
                     <span>{task.comments.length}</span>
-                 </div>
+                </div>
             )}
         </div>
       )}

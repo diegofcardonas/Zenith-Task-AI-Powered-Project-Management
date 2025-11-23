@@ -96,7 +96,9 @@ const es = {
     "taskCreated": "Tarea creada desde el chat: {{title}}",
     "commandError": "Comando no reconocido",
     "generatingSummary": "Leyendo mensajes...",
-    "suggestReplies": "Sugerir Respuestas"
+    "suggestReplies": "Sugerir Respuestas",
+    "startNewDM": "Nuevo Mensaje",
+    "selectUser": "Seleccionar Usuario"
   },
   "header": {
     "adminDashboard": "Dashboard de Admin",
@@ -329,7 +331,7 @@ const es = {
     "projectDeleted": "Proyecto \"{{name}}\" eliminado correctamente.",
     "folderUpdated": "Carpeta actualizada.",
     "folderCreated": "Carpeta creada.",
-    "folderDeleted": "Carpeta \"{{name}}\" eliminada correctamente.",
+    "folderDeleted": "Carpeta \"{{name}}\" eliminado correctamente.",
     "tasksReordered": "Orden de tareas actualizado.",
     "sidebarReordered": "Barra lateral reordenada.",
     "tasksUpdated": "{{count}} tarea actualizada.",
@@ -631,7 +633,9 @@ const en = {
     "taskCreated": "Task created from chat: {{title}}",
     "commandError": "Command not recognized",
     "generatingSummary": "Reading messages...",
-    "suggestReplies": "Suggest Replies"
+    "suggestReplies": "Suggest Replies",
+    "startNewDM": "New Message",
+    "selectUser": "Select User"
   },
   "header": {
     "adminDashboard": "Admin Dashboard",

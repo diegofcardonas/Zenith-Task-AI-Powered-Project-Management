@@ -221,7 +221,7 @@ const TeamChatView: React.FC = () => {
                                 <button 
                                     onClick={() => setIsNewChatModalOpen(true)}
                                     className="text-text-secondary hover:text-white hover:bg-white/10 rounded p-0.5 transition-colors opacity-0 group-hover:opacity-100"
-                                    title="Nuevo Mensaje"
+                                    title={t('chat.startNewDM')}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -263,7 +263,7 @@ const TeamChatView: React.FC = () => {
                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsNewChatModalOpen(false)}>
                         <div className="bg-[#1e293b] w-80 max-h-[400px] rounded-xl shadow-2xl border border-white/10 flex flex-col overflow-hidden animate-scaleIn" onClick={e => e.stopPropagation()}>
                             <div className="p-3 border-b border-white/10 flex justify-between items-center">
-                                <h3 className="font-bold text-white text-sm">Nuevo Mensaje</h3>
+                                <h3 className="font-bold text-white text-sm">{t('chat.selectUser')}</h3>
                                 <button onClick={() => setIsNewChatModalOpen(false)} className="text-text-secondary hover:text-white"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                             </div>
                             <div className="flex-grow overflow-y-auto p-2 space-y-1 custom-scrollbar">

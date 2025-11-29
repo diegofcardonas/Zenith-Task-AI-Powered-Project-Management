@@ -150,7 +150,7 @@ const ListView: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative">
+    <div className="w-full h-full flex flex-col relative bg-[#0f172a]">
         {selectedTaskIds.size > 0 && canEdit && (
             <BulkActionBar 
                 selectedCount={selectedTaskIds.size}
@@ -160,9 +160,9 @@ const ListView: React.FC = () => {
                 users={users}
             />
         )}
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a] backdrop-blur-md">
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur-md pb-2 pt-2">
             {/* Header Row - CSS Grid matched to TaskRow */}
-            <div className="hidden md:grid grid-cols-[40px_1fr_150px_120px_100px_150px_80px] gap-4 px-4 py-3 border-b border-white/5 text-[10px] text-text-secondary/70 uppercase font-bold tracking-widest items-center">
+            <div className="hidden md:grid grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-3 text-[11px] text-text-secondary font-bold uppercase tracking-wider items-center rounded-lg bg-surface border border-white/5 mx-4 shadow-sm">
                 <div className="flex items-center justify-center">
                     <div className="group relative">
                         <input 
@@ -177,10 +177,11 @@ const ListView: React.FC = () => {
                         </svg>
                     </div>
                 </div>
-                <div className="pl-2">{t('listView.task')}</div>
+                <div>{t('common.key')}</div>
+                <div>{t('listView.task')}</div>
                 <div>{t('listView.assignee')}</div>
                 <div>{t('listView.dueDate')}</div>
-                <div>{t('listView.priority')}</div>
+                <div className="text-center">{t('listView.priority')}</div>
                 <div>{t('listView.status')}</div>
                 <div className="text-right">{t('listView.actions')}</div>
             </div>
@@ -199,10 +200,10 @@ const ListView: React.FC = () => {
                 <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
              </div>
         </div>
-        <div className="overflow-y-auto pb-20 md:pb-0 no-scrollbar">
-            <div className="flex flex-col">
+        <div className="overflow-y-auto pb-20 md:pb-6 px-4 no-scrollbar">
+            <div className="flex flex-col space-y-2">
                 {tasks.map((task, index) => (
-                    <div key={task.id} className="animate-slideUpFade" style={{ animationDelay: `${Math.min(index * 50, 1000)}ms`, animationFillMode: 'both' }}>
+                    <div key={task.id} className="animate-slideUpFade" style={{ animationDelay: `${Math.min(index * 50, 300)}ms`, animationFillMode: 'both' }}>
                         <TaskRow
                             task={task}
                             isSelected={selectedTaskIds.has(task.id)}

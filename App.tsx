@@ -11,7 +11,6 @@ import ProjectModal from './components/ProjectModal';
 import BlockingTasksModal from './components/BlockingTasksModal';
 import AuthPage from './components/AuthPage';
 import MyTasksView from './components/MyTasksView';
-import TeamChatView from './components/TeamChatView';
 import CommandPalette from './components/CommandPalette';
 import WelcomePage from './components/WelcomePage';
 import SettingsModal from './components/SettingsModal';
@@ -90,8 +89,7 @@ const App: React.FC = () => {
     colorScheme,
     isConfirmationModalOpen,
     confirmationModalProps,
-    isAdminPanelOpen,
-    isChatOpen
+    isAdminPanelOpen
   } = state;
 
   const {
@@ -102,7 +100,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen || isChatOpen) return;
+        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen) return;
         const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
 
@@ -124,7 +122,7 @@ const App: React.FC = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, isChatOpen, actions, permissions]);
+  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, actions, permissions]);
 
   const handleCommand = (command: string, payload?: any) => {
       switch (command) {
@@ -194,7 +192,6 @@ const App: React.FC = () => {
         )}
         
         {/* Modals */}
-        {isChatOpen && <TeamChatView />}
         {isAdminPanelOpen && permissions.has(Permission.MANAGE_APP) && (
             <AppAdminPanel />
         )}

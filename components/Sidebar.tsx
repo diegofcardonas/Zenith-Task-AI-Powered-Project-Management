@@ -170,8 +170,7 @@ const Sidebar: React.FC = () => {
         currentUser,
         activeView,
         isSidebarOpen,
-        chatChannels,
-        isChatOpen
+        tasks
     } = state;
     const {
         handleSelectWorkspace,
@@ -185,7 +184,6 @@ const Sidebar: React.FC = () => {
         setIsFolderModalOpen,
         setFolderToEdit,
         handleSidebarReorder,
-        setIsChatOpen,
     } = actions;
 
     const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(folders.map(f => f.id)));
@@ -196,8 +194,13 @@ const Sidebar: React.FC = () => {
 
     const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
     
-    // Calculate total unread messages
-    const totalUnreadChat = useMemo(() => chatChannels.reduce((acc, c) => acc + (c.unreadCount || 0), 0), [chatChannels]);
+    // Calculate pending approvals count (Only show to Admins/Managers)
+    const pendingApprovalsCount = useMemo(() => {
+        if (currentUser?.role === 'Admin' || currentUser?.role === 'Manager') {
+            return tasks.filter(t => t.approvalStatus === 'pending').length;
+        }
+        return 0;
+    }, [tasks, currentUser]);
 
     const handleNavigation = (callback: () => void) => {
         callback();
@@ -411,12 +414,12 @@ const Sidebar: React.FC = () => {
                                 isActive={selectedListId === null && activeView === 'board'}
                                 onClick={() => handleNavigation(() => { setSelectedListId(null); setActiveView('board'); })}
                             />
-                            <SidebarItem 
-                                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" /></svg>}
-                                label={t('chat.teamChat')}
-                                isActive={isChatOpen}
-                                onClick={() => { setIsChatOpen(true); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                                badge={totalUnreadChat > 0 ? totalUnreadChat : undefined}
+                            <SidebarItem
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                                label={t('sidebar.approvals')}
+                                isActive={activeView === 'approvals'}
+                                onClick={() => handleNavigation(() => { setActiveView('approvals'); setSelectedListId(null); })}
+                                badge={pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined}
                             />
                             {permissions.has(Permission.VIEW_DASHBOARD) && (
                                 <SidebarItem 

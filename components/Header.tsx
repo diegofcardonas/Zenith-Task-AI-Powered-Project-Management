@@ -65,7 +65,6 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         users: allUsers, 
         notifications,
         selectedList,
-        chatChannels
     } = state;
 
     const {
@@ -80,7 +79,6 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         setListToEdit,
         setIsProjectModalOpen,
         handleDeleteList,
-        setIsChatOpen,
         handleUpdateUserStatus,
         handleLogout,
         setIsSettingsModalOpen,
@@ -119,7 +117,6 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     const setEditingUser = (user: User | null) => setEditingUserId(user ? user.id : null);
 
     const unreadCount = notifications.filter(n => !n.read).length;
-    const unreadChatCount = chatChannels.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
     const statusOptions: { status: UserStatus; label: string; color: string }[] = [
         { status: UserStatus.Online, label: t('common.online'), color: 'bg-green-500' },
@@ -139,8 +136,8 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     return (
         <header className="flex-shrink-0 flex items-center justify-between p-3 sm:p-4 border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-40">
             <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-                <button onClick={onToggleSidebar} className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-white/5 transition-colors" aria-label={t('header.openSidebar')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                <button onClick={onToggleSidebar} className="p-2.5 text-text-secondary hover:text-text-primary rounded-lg hover:bg-white/5 transition-colors focus:outline-none" aria-label={t('header.openSidebar')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate tracking-tight">{title}</h1>
                 {selectedList && permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
@@ -160,18 +157,6 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                     onSelectList={onNavigateToList}
                     onSelectUser={setEditingUser}
                 />
-
-                {/* Chat Button */}
-                <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="relative flex-shrink-0 p-2 rounded-full hover:bg-secondary-focus text-text-secondary hover:text-text-primary transition-colors"
-                    title={t('chat.teamChat')}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    {unreadChatCount > 0 && <span className="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-primary border-2 border-surface"></span>}
-                </button>
 
                 {/* Notifications */}
                 <div ref={notificationsPanelRef} className="relative">

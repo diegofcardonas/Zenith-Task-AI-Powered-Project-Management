@@ -18,6 +18,8 @@ export enum TaskType {
   Epic = 'Epic',
 }
 
+export type ApprovalStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
 export enum ViewType {
   Board = 'board',
   List = 'list',
@@ -25,7 +27,8 @@ export enum ViewType {
   Gantt = 'gantt',
   ProjectDashboard = 'project_dashboard',
   Eisenhower = 'eisenhower',
-  Backlog = 'backlog'
+  Backlog = 'backlog',
+  Approvals = 'approvals'
 }
 
 export enum Role {
@@ -120,6 +123,7 @@ export interface Task {
   priority: Priority;
   storyPoints?: number;
   assigneeId: string | null;
+  approvalStatus: ApprovalStatus;
   dueDate: string;
   listId: string;
   subtasks: Subtask[];
@@ -162,21 +166,19 @@ export interface TaskTemplate {
     taskData: Partial<Task>;
 }
 
+export interface ChatChannel {
+    id: string;
+    type: 'dm' | 'group';
+    name: string;
+    participants: string[];
+    lastMessage?: string;
+    unreadCount: number;
+}
+
 export interface ChatMessage {
     id: string;
     channelId: string;
     senderId: string;
     text: string;
     timestamp: string;
-}
-
-export interface ChatChannel {
-    id: string;
-    name: string;
-    type: 'group' | 'dm';
-    participants: string[];
-    lastMessage?: string;
-    lastMessageTime?: string;
-    unreadCount?: number;
-    avatar?: string;
 }

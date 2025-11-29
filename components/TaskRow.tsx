@@ -90,9 +90,16 @@ const TaskRow: React.FC<TaskRowProps> = ({
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
       onClick={() => setSelectedTaskId(task.id)}
-      className={`group relative grid grid-cols-1 md:grid-cols-[40px_60px_1fr_150px_120px_80px_150px_80px] gap-4 px-4 py-3 border-b border-white/5 transition-all duration-200 hover:bg-white/[0.02] items-center cursor-pointer ${isDraggable ? 'active:cursor-grabbing' : ''} ${isSelected ? 'bg-primary/5' : ''} ${task.status === Status.Done ? 'opacity-50' : 'opacity-100'}`}
+      className={`
+        group relative grid grid-cols-1 md:grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-4 
+        rounded-xl border border-white/5 transition-all duration-200 
+        items-center cursor-pointer 
+        ${isSelected ? 'bg-primary/10 border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]' : 'bg-surface hover:bg-white/[0.04] hover:border-white/10 hover:shadow-lg hover:-translate-y-0.5'}
+        ${task.status === Status.Done ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'}
+        ${isDraggable ? 'active:cursor-grabbing' : ''}
+      `}
     >
-        {isDraggable && <div className="absolute left-0 top-0 bottom-0 w-1 group-hover:bg-white/10 transition-colors"></div>}
+        {isDraggable && <div className="absolute left-0 top-0 bottom-0 w-1 group-hover:bg-white/10 transition-colors rounded-l-xl"></div>}
 
         {/* Checkbox */}
         <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
@@ -100,9 +107,9 @@ const TaskRow: React.FC<TaskRowProps> = ({
         </div>
 
         {/* Type & Key */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
             <TypeIcon type={task.type || TaskType.Task} />
-            <span className="text-xs font-mono text-text-secondary">{task.issueKey}</span>
+            <span className="text-xs font-mono text-text-secondary group-hover:text-primary transition-colors">{task.issueKey}</span>
         </div>
 
         {/* Title & Project */}
@@ -110,15 +117,22 @@ const TaskRow: React.FC<TaskRowProps> = ({
             <div className="flex items-center gap-2">
                 <span className={`font-medium text-sm truncate ${task.status === Status.Done ? 'text-text-secondary line-through' : 'text-text-primary'}`}>{task.title}</span>
                 {task.storyPoints !== undefined && task.storyPoints > 0 && (
-                    <span className="bg-secondary text-[9px] font-mono px-1.5 py-0.5 rounded text-text-secondary">{task.storyPoints}</span>
+                    <span className="bg-secondary text-[9px] font-mono px-1.5 py-0.5 rounded text-text-secondary border border-white/5">{task.storyPoints}</span>
+                )}
+                {/* Approval Status Indicator */}
+                {task.approvalStatus === 'pending' && (
+                    <span className="flex items-center gap-1 bg-amber-500/20 text-amber-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Review
+                    </span>
                 )}
             </div>
-            {!selectedListId && projectList && <span className={`text-[10px] mt-1 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10`}>{projectList.name}</span>}
+            {!selectedListId && projectList && <span className={`text-[10px] mt-1.5 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10`}>{projectList.name}</span>}
         </div>
 
         {/* Assignee */}
         <div className="hidden md:flex items-center">
-            {assignee ? <div className="flex items-center gap-2" title={assignee.name}><AvatarWithStatus user={assignee} className="w-6 h-6" /><span className="text-xs text-text-secondary truncate max-w-[120px]">{assignee.name.split(' ')[0]}</span></div> : <div className="text-xs text-text-secondary/50 flex items-center gap-1.5"><div className="w-6 h-6 rounded-full border border-dashed border-white/20 flex items-center justify-center">?</div></div>}
+            {assignee ? <div className="flex items-center gap-2.5" title={assignee.name}><AvatarWithStatus user={assignee} className="w-6 h-6 ring-2 ring-surface" /><span className="text-xs text-text-secondary truncate max-w-[120px]">{assignee.name.split(' ')[0]}</span></div> : <div className="text-xs text-text-secondary/50 flex items-center gap-1.5"><div className="w-6 h-6 rounded-full border border-dashed border-white/20 flex items-center justify-center">?</div></div>}
         </div>
 
         {/* Date */}
@@ -137,7 +151,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
              {canEdit && <button onClick={(e) => { e.stopPropagation(); setSelectedTaskId(task.id); }} className="p-1.5 text-text-secondary hover:text-primary hover:bg-white/10 rounded-md transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>}
              {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="p-1.5 text-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>}
         </div>
@@ -145,4 +159,4 @@ const TaskRow: React.FC<TaskRowProps> = ({
   );
 };
 
-export default TaskRow;
+export default React.memo(TaskRow);

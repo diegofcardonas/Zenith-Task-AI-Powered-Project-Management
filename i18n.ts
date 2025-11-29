@@ -91,7 +91,8 @@ const es = {
     "home": "Inicio",
     "favorites": "Favoritos",
     "workspace": "Espacio de Trabajo",
-    "noFavorites": "Sin favoritos aún"
+    "noFavorites": "Sin favoritos aún",
+    "approvals": "Aprobaciones"
   },
   "mainContent": {
     "board": "Tablero",
@@ -101,6 +102,7 @@ const es = {
     "dashboard": "Dashboard",
     "eisenhower": "Matriz",
     "backlog": "Backlog",
+    "approvals": "Aprobaciones",
     "noProjectSelected": "Ningún Proyecto Seleccionado",
     "noProjectSelectedMessage": "Por favor, crea un nuevo proyecto en este espacio de trabajo o selecciona uno de la barra lateral.",
     "newTask": "Nuevo",
@@ -118,21 +120,28 @@ const es = {
     "dragToSprint": "Arrastra tareas aquí para iniciar el trabajo",
     "issues": "Incidencias",
     "createIssue": "Crear incidencia",
-    "version": "Versión",
+    "version": "Version",
     "epic": "Épica",
     "completeSprint": "Completar Sprint",
     "sprintCompleted": "¡Sprint Completado!",
     "sprintCompletedMessage": "{{count}} tareas movidas al archivo."
   },
-  "chat": {
-    "teamChat": "Chat de Equipo",
-    "channels": "Canales",
-    "directMessages": "Mensajes Directos",
-    "placeholder": "Escribe un mensaje... (/task para tarea)",
-    "selectToStart": "Selecciona un chat para comenzar",
-    "taskCreated": "Tarea creada desde el chat: {{title}}",
-    "startNewDM": "Nuevo Mensaje",
-    "selectUser": "Seleccionar Usuario"
+  "approvals": {
+    "title": "Centro de Aprobaciones",
+    "subtitle": "Gestiona las revisiones y aprobaciones de tareas.",
+    "needsApproval": "Requieren mi Aprobación",
+    "myRequests": "Mis Solicitudes Enviadas",
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "submitForApproval": "Enviar a Aprobación",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "noPendingApprovals": "No tienes tareas pendientes de aprobación.",
+    "noSentRequests": "No has enviado ninguna solicitud de aprobación.",
+    "statusPending": "En espera de revisión",
+    "statusApproved": "Solicitud aprobada",
+    "statusRejected": "Solicitud rechazada"
   },
   "header": {
     "adminDashboard": "Dashboard de Admin",
@@ -284,13 +293,17 @@ const es = {
     "dangerZone": "Zona de Peligro",
     "deleteAccount": "Eliminar Cuenta",
     "deleteAccountWarning": "Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.",
-    "workspace": "Espacio de Trabajo"
+    "workspace": "Espacio de Trabajo",
+    "approvalStatus": "Estado de Aprobación"
   },
   "notifications": {
     "title": "Notificaciones",
     "markAllAsRead": "Marcar todo como leído",
     "noNotifications": "No tienes notificaciones.",
-    "mentionMessage": "{{name}} te mencionó en un comentario en la tarea \"{{taskTitle}}\""
+    "mentionMessage": "{{name}} te mencionó en un comentario en la tarea \"{{taskTitle}}\"",
+    "approvalRequested": "{{name}} solicitó aprobación para \"{{taskTitle}}\"",
+    "taskApproved": "Tu tarea \"{{taskTitle}}\" fue aprobada",
+    "taskRejected": "Tu tarea \"{{taskTitle}}\" fue rechazada"
   },
   "userSelection": {
     "welcome": "Bienvenido a Zenith Task",
@@ -328,7 +341,10 @@ const es = {
     "loginFailed": "Credenciales inválidas. Por favor, inténtalo de nuevo.",
     "signupFailed": "El correo electrónico ya está en uso. Por favor, inicia sesión.",
     "signupSuccess": "¡Registro exitoso! Bienvenido.",
-    "bulkUpdateSuccess": "{{count}} usuarios actualizados correctamente."
+    "bulkUpdateSuccess": "{{count}} usuarios actualizados correctamente.",
+    "approvalSubmitted": "Solicitud de aprobación enviada.",
+    "approvalApproved": "Tarea aprobada y movida a Hecho.",
+    "approvalRejected": "Tarea rechazada."
   },
   "gantt": {
     "taskName": "Nombre de la Tarea",
@@ -340,7 +356,6 @@ const es = {
     "users": "Usuarios",
     "teams": "Equipos",
     "globalSettings": "Configuración Global",
-    "chatSettings": "Configuración del Chat",
     "auditLog": "Auditoría",
     "billing": "Facturación",
     "systemHealth": "Salud del Sistema",
@@ -392,11 +407,6 @@ const es = {
     "security": "Seguridad",
     "accessControl": "Control de Acceso",
     "enforce2FA": "Forzar autenticación de dos factores (2FA)",
-    "enableChat": "Habilitar Chat Global",
-    "allowMessageEditing": "Permitir editar mensajes",
-    "mediaStorage": "Multimedia y Almacenamiento",
-    "retentionPolicy": "Retención de Mensajes (Días)",
-    "maxFileSize": "Tamaño Máximo de Archivo (MB)",
     "auditAction_create_project": "creó el proyecto",
     "auditAction_delete_user": "eliminó al usuario",
     "auditAction_change_role": "cambió el rol de"
@@ -451,7 +461,25 @@ const en = {
     "dashboard": "Dashboard",
     "eisenhower": "Matrix",
     "backlog": "Backlog",
+    "approvals": "Approvals",
     // ... rest
+  },
+  "approvals": {
+    "title": "Approvals Center",
+    "subtitle": "Manage task reviews and approvals.",
+    "needsApproval": "Needs My Approval",
+    "myRequests": "My Sent Requests",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "submitForApproval": "Submit for Approval",
+    "approve": "Approve",
+    "reject": "Reject",
+    "noPendingApprovals": "No tasks pending your approval.",
+    "noSentRequests": "You haven't sent any approval requests.",
+    "statusPending": "Pending review",
+    "statusApproved": "Request approved",
+    "statusRejected": "Request rejected"
   },
   "backlog": {
     "activeSprint": "Active Sprint",

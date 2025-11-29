@@ -33,11 +33,11 @@ const TypeIcon: React.FC<{ type: TaskType }> = ({ type }) => {
 const PriorityIcon: React.FC<{ priority: Priority }> = ({ priority }) => {
     switch (priority) {
         case Priority.High:
-            return <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>; // Up Arrow
+            return <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>; 
         case Priority.Low:
-            return <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>; // Down Arrow
+            return <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>; 
         default:
-            return <svg className="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" /></svg>; // Equal
+            return <svg className="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" /></svg>; 
     }
 };
 
@@ -114,6 +114,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
                         {task.storyPoints}
                     </span>
                 )}
+                {/* Global View: Show Project Badge */}
                 {!selectedListId && projectList && (
                     <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
                         {projectList.key}
@@ -140,4 +141,4 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
   );
 };
 
-export default TaskCard;
+export default React.memo(TaskCard);

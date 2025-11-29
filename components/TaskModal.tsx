@@ -54,7 +54,7 @@ const CommentComponent: React.FC<{
 const TaskModal: React.FC = () => {
     const { state, actions, permissions } = useAppContext();
     const { selectedTask, users, lists, currentUser, allTasks } = state;
-    const { setSelectedTaskId, handleUpdateTask, handleDeleteTask, handleSaveTemplate } = actions;
+    const { setSelectedTaskId, handleUpdateTask, handleDeleteTask, handleSaveTemplate, handleSubmitForApproval } = actions;
     const { t, i18n } = useTranslation();
 
     const [editedTask, setEditedTask] = useState<Task | null>(selectedTask);
@@ -174,6 +174,15 @@ const TaskModal: React.FC = () => {
           <div className="flex items-center gap-3">
               <div className="text-sm font-mono text-text-secondary bg-secondary/50 px-2 py-1 rounded">{editedTask.issueKey}</div>
               <div className="text-sm text-text-secondary truncate max-w-[200px]">{project?.name}</div>
+              {editedTask.approvalStatus && editedTask.approvalStatus !== 'none' && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                      editedTask.approvalStatus === 'approved' ? 'bg-green-500/20 text-green-500' :
+                      editedTask.approvalStatus === 'rejected' ? 'bg-red-500/20 text-red-500' :
+                      'bg-amber-500/20 text-amber-500'
+                  }`}>
+                      {t(`approvals.${editedTask.approvalStatus}`)}
+                  </span>
+              )}
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (
@@ -243,6 +252,18 @@ const TaskModal: React.FC = () => {
             </main>
             
             <aside className="lg:col-span-1 p-4 sm:p-6 border-t lg:border-t-0 lg:border-l border-border overflow-y-auto space-y-5 bg-surface/50 lg:bg-transparent">
+                 
+                 {/* Approval Button */}
+                 {canEdit && (editedTask.approvalStatus === 'none' || editedTask.approvalStatus === 'rejected') && (
+                     <button 
+                        onClick={() => handleSubmitForApproval(editedTask.id)}
+                        className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                     >
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                         {t('approvals.submitForApproval')}
+                     </button>
+                 )}
+
                  <div>
                     <label className="font-semibold text-text-secondary block text-sm">{t('common.type')}</label>
                     <select value={editedTask.type || TaskType.Task} disabled={!canEdit} onChange={e => handleInputChange('type', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">

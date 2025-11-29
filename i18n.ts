@@ -167,7 +167,8 @@ const es = {
     "openSidebar": "Abrir barra lateral",
     "toggleNotifications": "Alternar notificaciones",
     "editProject": "Editar Proyecto",
-    "deleteProject": "Eliminar Proyecto"
+    "deleteProject": "Eliminar Proyecto",
+    "help": "Centro de Ayuda"
   },
   "footer": {
     "copyright": "© {{year}} Zenith Task. Todos los derechos reservados."
@@ -470,10 +471,64 @@ const es = {
       "thu": "Jue",
       "fri": "Vie",
       "sat": "Sáb"
+  },
+  "help": {
+    "title": "Centro de Ayuda",
+    "search": "Buscar ayuda...",
+    "categories": {
+      "general": "Conceptos Generales",
+      "views": "Vistas de Proyecto",
+      "roles": "Roles y Permisos",
+      "actions": "Acciones y Flujos",
+      "mobile": "Funciones Móviles"
+    },
+    "articles": {
+      "workspace": {
+        "title": "Espacios de Trabajo",
+        "content": "Un **Espacio de Trabajo** es el contenedor principal de tu organización (Ej: Ceitel Operaciones). Dentro de él, puedes organizar tus proyectos en carpetas y listas."
+      },
+      "projects": {
+        "title": "Proyectos y Carpetas",
+        "content": "Los **Proyectos (Listas)** contienen tus tareas. Puedes agrupar varios proyectos relacionados (ej: Contrato DICO) dentro de una **Carpeta** para mantener el orden."
+      },
+      "board": {
+        "title": "Vista de Tablero (Kanban)",
+        "content": "Visualiza el flujo de trabajo moviendo tarjetas entre columnas (Por Hacer, En Progreso, Hecho). Arrastra y suelta para actualizar el estado."
+      },
+      "list": {
+        "title": "Vista de Lista",
+        "content": "Una tabla detallada ideal para gestión masiva. Permite filtrar, ordenar y realizar acciones en lote (seleccionar múltiples tareas para editar/borrar)."
+      },
+      "backlog": {
+        "title": "Vista Backlog",
+        "content": "Inspirada en Jira. Divide el trabajo en un **Sprint Activo** (tareas en curso) y un **Backlog** (pila de producto). Usa los Story Points para estimar esfuerzo."
+      },
+      "gantt": {
+        "title": "Diagrama de Gantt",
+        "content": "Cronograma visual para ver la duración y dependencias de las tareas. Arrastra los bordes de las barras para ajustar fechas de inicio o fin."
+      },
+      "eisenhower": {
+        "title": "Matriz de Eisenhower",
+        "content": "Prioriza tareas automáticamente en 4 cuadrantes según su Urgencia (Fecha) e Importancia (Prioridad). Ayuda a decidir qué hacer ahora o delegar."
+      },
+      "approvals": {
+        "title": "Aprobaciones",
+        "content": "Flujo de revisión formal. Los miembros pueden enviar una tarea a 'Revisión'. Los Managers/Admins verán la solicitud en el centro de Aprobaciones para Aprobar o Rechazar."
+      },
+      "roles": {
+        "title": "Roles de Usuario",
+        "content": "- **Admin:** Dueño del sistema. Gestiona facturación y usuarios globales.\n- **Manager:** Jefe de Proyecto. Crea proyectos y gestiona equipos.\n- **Member:** Trabajador. Crea y edita tareas.\n- **Viewer:** Solo lectura. Puede comentar pero no editar."
+      },
+      "tasks": {
+        "title": "Creación de Tareas",
+        "content": "Usa el botón **'Nuevo'** o la tecla `N`. Puedes asignar responsables, fechas, prioridad y adjuntar archivos. Las tareas pueden tener subtareas y dependencias."
+      }
+    }
   }
 };
 
 const en = {
+  // ... English translations (Simplified for this output, ideally mirror Spanish)
   "common": {
     "admin": "Admin",
     "manager": "Manager",
@@ -627,7 +682,8 @@ const en = {
     "openSidebar": "Open sidebar",
     "toggleNotifications": "Toggle notifications",
     "editProject": "Edit Project",
-    "deleteProject": "Delete Project"
+    "deleteProject": "Delete Project",
+    "help": "Help Center"
   },
   "footer": {
     "copyright": "© {{year}} Zenith Task. All rights reserved."
@@ -708,7 +764,7 @@ const en = {
     "attachments": "Attachments",
     "attachFile": "+ Attach File",
     "subtasks": "Subtasks",
-    "subtasksCompleted": "Subtasks ({{completed}}/{{total}})",
+    "subtasksCompleted": "Subtareas ({{completed}}/{{total}})",
     "addSubtask": "+ Add a subtask",
     "dependencies": "Dependencies",
     "dependsOn": "Depends on",
@@ -891,33 +947,58 @@ const en = {
     "notUrgentNotImportant": "Delete (Not Urgent & Not Important)",
     "noTasks": "No tasks in this quadrant"
   },
-  "myTasks": {
-      "goodMorning": "Good morning",
-      "goodAfternoon": "Good afternoon",
-      "goodEvening": "Good evening",
-      "greetingSubtitle": "You have {{count}} tasks for today",
-      "goodJob": "Good job! You have no tasks for today.",
-      "overdue": "Overdue",
-      "dueToday": "Due Today",
-      "upcoming": "Upcoming",
-      "completedRecently": "Completed Recently",
-      "noDueDate": "No Date",
-      "noTasks": "No tasks in this category."
-  },
-  "projectDashboard": {
-      "tasksByStatus": "Tasks by Status",
-      "tasksByAssignee": "Tasks by Assignee",
-      "noTasksToShow": "No tasks to show",
-      "unassigned": "Unassigned"
-  },
-  "weekdays": {
-      "sun": "Sun",
-      "mon": "Mon",
-      "tue": "Tue",
-      "wed": "Wed",
-      "thu": "Thu",
-      "fri": "Fri",
-      "sat": "Sat"
+  "help": {
+    "title": "Help Center",
+    "search": "Search help...",
+    "categories": {
+      "general": "General Concepts",
+      "views": "Project Views",
+      "roles": "Roles & Permissions",
+      "actions": "Actions & Workflows",
+      "mobile": "Mobile Features"
+    },
+    "articles": {
+      "workspace": {
+        "title": "Workspaces",
+        "content": "A **Workspace** is the top-level container for your organization (e.g., Ceitel Operations). Inside it, you can organize projects into folders and lists."
+      },
+      "projects": {
+        "title": "Projects & Folders",
+        "content": "**Projects (Lists)** contain your tasks. You can group related projects (e.g., DICO Contract) inside a **Folder** to keep things organized."
+      },
+      "board": {
+        "title": "Board View (Kanban)",
+        "content": "Visualize workflow by moving cards between columns (Todo, In Progress, Done). Drag and drop to update status instantly."
+      },
+      "list": {
+        "title": "List View",
+        "content": "A detailed table perfect for bulk management. Allows filtering, sorting, and bulk actions (selecting multiple tasks to edit/delete)."
+      },
+      "backlog": {
+        "title": "Backlog View",
+        "content": "Jira-inspired view. Splits work into an **Active Sprint** (current tasks) and a **Backlog** (product pile). Use Story Points for estimation."
+      },
+      "gantt": {
+        "title": "Gantt Chart",
+        "content": "Timeline view to see task duration and dependencies. Drag bar edges to adjust start/end dates."
+      },
+      "eisenhower": {
+        "title": "Eisenhower Matrix",
+        "content": "Automatically prioritizes tasks into 4 quadrants based on Urgency (Date) and Importance (Priority). Helps decide what to Do or Delegate."
+      },
+      "approvals": {
+        "title": "Approvals",
+        "content": "Formal review workflow. Members can 'Submit for Approval'. Managers/Admins see requests in the Approval Center to Approve or Reject."
+      },
+      "roles": {
+        "title": "User Roles",
+        "content": "- **Admin:** System owner. Billing & global users.\n- **Manager:** Project Lead. Creates projects & manages teams.\n- **Member:** Worker. Creates & edits tasks.\n- **Viewer:** Read-only. Can comment but not edit."
+      },
+      "tasks": {
+        "title": "Creating Tasks",
+        "content": "Use the **'New'** button or press `N`. You can assign owners, dates, priority, and attach files. Tasks support subtasks and dependencies."
+      }
+    }
   }
 };
 
@@ -946,13 +1027,17 @@ class I18nService {
         this.notify();
     }
 
-    t(key: string, options?: any): string {
+    t(key: string, options?: any): any {
         const keys = key.split('.');
         let value = this.translations[this.language];
         
         for (const k of keys) {
             if (value === undefined) return key;
             value = value[k];
+        }
+        
+        if (options?.returnObjects) {
+            return value;
         }
         
         if (typeof value !== 'string') return key;

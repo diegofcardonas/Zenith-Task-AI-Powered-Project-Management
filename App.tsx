@@ -16,6 +16,7 @@ import WelcomePage from './components/WelcomePage';
 import SettingsModal from './components/SettingsModal';
 import FolderModal from './components/FolderModal';
 import ConfirmationModal from './components/ConfirmationModal';
+import HelpPanel from './components/HelpPanel';
 import { useAppContext, AppProvider } from './contexts/AppContext';
 import { Toast, Permission } from './types';
 import { useTranslation } from './i18n';
@@ -89,7 +90,8 @@ const App: React.FC = () => {
     colorScheme,
     isConfirmationModalOpen,
     confirmationModalProps,
-    isAdminPanelOpen
+    isAdminPanelOpen,
+    isHelpOpen
   } = state;
 
   const {
@@ -195,6 +197,8 @@ const App: React.FC = () => {
         {isAdminPanelOpen && permissions.has(Permission.MANAGE_APP) && (
             <AppAdminPanel />
         )}
+
+        <HelpPanel />
 
         {selectedTask && <TaskModal />}
         {editingUser && <UserProfileModal user={editingUser} onClose={() => actions.setEditingUserId(null)} onUpdateUser={actions.handleUpdateUser} isEditingSelf={editingUser.id === currentUser.id} />}

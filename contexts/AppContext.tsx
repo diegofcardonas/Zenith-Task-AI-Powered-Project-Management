@@ -80,6 +80,7 @@ interface AppState {
     theme: 'default' | 'forest' | 'ocean' | 'sunset' | 'rose' | 'slate';
     colorScheme: 'light' | 'dark';
     isAdminPanelOpen: boolean;
+    isHelpOpen: boolean;
     chatChannels: ChatChannel[];
     chatMessages: ChatMessage[];
     activeChatId: string | null;
@@ -118,6 +119,7 @@ type Action =
     | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
     | { type: 'REORDER_SIDEBAR'; payload: { folders: Folder[], lists: List[] } }
     | { type: 'SET_ADMIN_PANEL_OPEN'; payload: boolean }
+    | { type: 'SET_HELP_OPEN'; payload: boolean }
     | { type: 'SET_CHAT_OPEN'; payload: boolean }
     | { type: 'SET_ACTIVE_CHAT'; payload: string | null }
     | { type: 'ADD_CHAT_MESSAGE'; payload: ChatMessage }
@@ -166,6 +168,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'ADD_TEMPLATE': return { ...state, taskTemplates: [...state.taskTemplates, action.payload] };
         case 'REORDER_SIDEBAR': return { ...state, folders: action.payload.folders, lists: action.payload.lists };
         case 'SET_ADMIN_PANEL_OPEN': return { ...state, isAdminPanelOpen: action.payload };
+        case 'SET_HELP_OPEN': return { ...state, isHelpOpen: action.payload };
         case 'SET_CHAT_OPEN': return { ...state, isChatOpen: action.payload };
         case 'SET_ACTIVE_CHAT': {
             const channels = state.chatChannels.map(c => c.id === action.payload ? { ...c, unreadCount: 0 } : c);
@@ -241,6 +244,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         theme: 'default',
         colorScheme: 'dark',
         isAdminPanelOpen: false,
+        isHelpOpen: false,
         chatChannels: initialChatChannels,
         chatMessages: initialChatMessages,
         activeChatId: null,
@@ -650,6 +654,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             dispatch({ type: 'ADD_TOAST', payload: { message: t('toasts.templateSaved', { name }), type: 'success', id: Date.now() } });
         },
         setIsAdminPanelOpen: (isOpen: boolean) => dispatch({ type: 'SET_ADMIN_PANEL_OPEN', payload: isOpen }),
+        setIsHelpOpen: (isOpen: boolean) => dispatch({ type: 'SET_HELP_OPEN', payload: isOpen }),
         handleCompleteSprint: (listId: string | null) => {
             const targetListId = listId;
             const tasksToArchive = state.tasks.filter(t => t.status === Status.Done && (targetListId ? t.listId === targetListId : true)).map(t => t.id);
@@ -831,6 +836,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentView,
         isSidebarOpen,
         isAdminPanelOpen: state.isAdminPanelOpen,
+        isHelpOpen: state.isHelpOpen,
         isWorkspaceModalOpen,
         workspaceToEdit,
         isProjectModalOpen,

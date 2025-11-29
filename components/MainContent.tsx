@@ -121,7 +121,7 @@ const MainContent: React.FC = () => {
             <>
             {activeView !== 'approvals' && (
                 <div className="flex-shrink-0 p-4 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#0f172a]/95 backdrop-blur-sm sticky top-[64px] z-20 shadow-sm">
-                    <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 no-scrollbar">
+                    <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 no-scrollbar mask-linear-fade">
                         <div className="bg-surface p-1 rounded-lg flex items-center whitespace-nowrap w-max border border-white/5">
                             {[
                                 { id: ViewType.Board, label: t('mainContent.board') },
@@ -144,8 +144,8 @@ const MainContent: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3 flex-wrap w-full md:w-auto justify-between md:justify-end">
-                        <div className="flex gap-2">
-                            <div className="relative group">
+                        <div className="flex gap-2 flex-grow sm:flex-grow-0">
+                            <div className="relative group flex-grow">
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
@@ -155,7 +155,7 @@ const MainContent: React.FC = () => {
                                     {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
                                 </select>
                             </div>
-                            <div className="relative group">
+                            <div className="relative group flex-grow">
                                 <select
                                     value={priorityFilter}
                                     onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}

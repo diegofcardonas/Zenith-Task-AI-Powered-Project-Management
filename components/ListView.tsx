@@ -150,7 +150,7 @@ const ListView: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative bg-[#0f172a]">
+    <div className="w-full h-full flex flex-col relative bg-[#0f172a] overflow-y-auto pb-20 md:pb-6 px-4 no-scrollbar">
         {selectedTaskIds.size > 0 && canEdit && (
             <BulkActionBar 
                 selectedCount={selectedTaskIds.size}
@@ -160,9 +160,9 @@ const ListView: React.FC = () => {
                 users={users}
             />
         )}
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur-md pb-2 pt-2 border-b border-white/5 md:border-none">
-            <div className="max-w-[1600px] mx-auto px-4 w-full">
-                {/* Header Row - CSS Grid matched to TaskRow */}
+        <div className="max-w-[1600px] mx-auto w-full">
+            <div className="sticky top-0 z-20 bg-[#0f172a]/95 backdrop-blur-md pb-2 pt-2 border-b border-white/5 md:border-none">
+                {/* Header Row - CSS Grid matched to TaskRow (Desktop Only) */}
                 <div className="hidden md:grid grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-3 text-[11px] text-text-secondary font-bold uppercase tracking-wider items-center rounded-xl bg-surface border border-white/5 shadow-sm">
                     <div className="flex items-center justify-center">
                         <div className="group relative">
@@ -187,7 +187,7 @@ const ListView: React.FC = () => {
                     <div className="text-right">{t('listView.actions')}</div>
                 </div>
                  {/* Mobile "Select All" helper */}
-                 <div className="md:hidden p-3 flex items-center justify-between bg-white/[0.02] rounded-lg border border-white/5">
+                 <div className="md:hidden p-3 flex items-center justify-between bg-white/[0.02] rounded-lg border border-white/5 mb-2">
                     <label className="flex items-center gap-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">
                          <input 
                             type="checkbox" 
@@ -201,9 +201,8 @@ const ListView: React.FC = () => {
                     <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
                  </div>
             </div>
-        </div>
-        <div className="overflow-y-auto pb-20 md:pb-6 px-4 no-scrollbar">
-            <div className="flex flex-col space-y-2 max-w-[1600px] mx-auto w-full">
+            
+            <div className="flex flex-col space-y-2 mt-2">
                 {tasks.map((task, index) => (
                     <div key={task.id} className="animate-slideUpFade" style={{ animationDelay: `${Math.min(index * 50, 300)}ms`, animationFillMode: 'both' }}>
                         <TaskRow

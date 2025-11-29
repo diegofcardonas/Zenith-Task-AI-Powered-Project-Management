@@ -91,67 +91,102 @@ const TaskRow: React.FC<TaskRowProps> = ({
       onDragOver={(e) => e.preventDefault()}
       onClick={() => setSelectedTaskId(task.id)}
       className={`
-        group relative grid grid-cols-1 md:grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-4 
+        group relative 
+        flex flex-col md:grid md:grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] 
+        gap-2 md:gap-4 p-4 md:px-6 md:py-4
         rounded-xl border border-white/5 transition-all duration-200 
-        items-center cursor-pointer 
+        md:items-center cursor-pointer 
         ${isSelected ? 'bg-primary/10 border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]' : 'bg-surface hover:bg-white/[0.04] hover:border-white/10 hover:shadow-lg hover:-translate-y-0.5'}
         ${task.status === Status.Done ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'}
         ${isDraggable ? 'active:cursor-grabbing' : ''}
       `}
     >
-        {isDraggable && <div className="absolute left-0 top-0 bottom-0 w-1 group-hover:bg-white/10 transition-colors rounded-l-xl"></div>}
+        {isDraggable && <div className="hidden md:block absolute left-0 top-0 bottom-0 w-1 group-hover:bg-white/10 transition-colors rounded-l-xl"></div>}
 
-        {/* Checkbox */}
-        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+        {/* --- Mobile Header Row: Checkbox + Key + Actions --- */}
+        <div className="flex md:hidden justify-between items-center w-full mb-2">
+            <div className="flex items-center gap-3">
+                <input type="checkbox" className="w-5 h-5 rounded bg-transparent border-white/20 checked:bg-primary checked:border-primary cursor-pointer appearance-none border" checked={isSelected} onChange={() => onToggleSelection(task.id)} disabled={!canEdit} onClick={(e) => e.stopPropagation()} />
+                <div className="flex items-center gap-2">
+                    <TypeIcon type={task.type || TaskType.Task} />
+                    <span className="text-xs font-mono text-text-secondary">{task.issueKey}</span>
+                </div>
+            </div>
+            {/* Mobile Actions */}
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                {canEdit && <button onClick={() => setSelectedTaskId(task.id)} className="p-1.5 text-text-secondary hover:text-primary"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>}
+                {canDelete && <button onClick={() => handleDeleteTask(task.id)} className="p-1.5 text-text-secondary hover:text-red-400"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>}
+            </div>
+        </div>
+
+        {/* Checkbox (Desktop) */}
+        <div className="hidden md:flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <input type="checkbox" className="peer w-4 h-4 rounded bg-transparent border-white/20 checked:bg-primary checked:border-primary cursor-pointer transition-all appearance-none border" checked={isSelected} onChange={() => onToggleSelection(task.id)} disabled={!canEdit} />
         </div>
 
-        {/* Type & Key */}
-        <div className="flex items-center gap-2.5">
+        {/* Type & Key (Desktop) */}
+        <div className="hidden md:flex items-center gap-2.5 min-w-0">
             <TypeIcon type={task.type || TaskType.Task} />
-            <span className="text-xs font-mono text-text-secondary group-hover:text-primary transition-colors">{task.issueKey}</span>
+            <span className="text-xs font-mono text-text-secondary group-hover:text-primary transition-colors truncate">{task.issueKey}</span>
         </div>
 
-        {/* Title & Project */}
-        <div className="flex flex-col justify-center min-w-0 pr-4">
-            <div className="flex items-center gap-2">
-                <span className={`font-medium text-sm truncate ${task.status === Status.Done ? 'text-text-secondary line-through' : 'text-text-primary'}`}>{task.title}</span>
+        {/* Title & Project (Shared) */}
+        <div className="flex flex-col justify-center min-w-0 pr-0 md:pr-4 w-full">
+            <div className="flex items-center gap-2 min-w-0">
+                <span className={`font-medium text-base md:text-sm truncate ${task.status === Status.Done ? 'text-text-secondary line-through' : 'text-text-primary'}`}>{task.title}</span>
                 {task.storyPoints !== undefined && task.storyPoints > 0 && (
-                    <span className="bg-secondary text-[9px] font-mono px-1.5 py-0.5 rounded text-text-secondary border border-white/5">{task.storyPoints}</span>
+                    <span className="bg-secondary text-[9px] font-mono px-1.5 py-0.5 rounded text-text-secondary border border-white/5 flex-shrink-0">{task.storyPoints}</span>
                 )}
-                {/* Approval Status Indicator */}
                 {task.approvalStatus === 'pending' && (
-                    <span className="flex items-center gap-1 bg-amber-500/20 text-amber-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span className="flex-shrink-0 flex items-center gap-1 bg-amber-500/20 text-amber-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">
                         Review
                     </span>
                 )}
             </div>
-            {!selectedListId && projectList && <span className={`text-[10px] mt-1.5 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10`}>{projectList.name}</span>}
+            {/* Mobile Metadata Row underneath Title */}
+            <div className="flex md:hidden items-center gap-3 mt-2 text-xs text-text-secondary">
+                 {!selectedListId && projectList && <span className={`text-[10px] px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10 truncate max-w-[100px]`}>{projectList.name}</span>}
+                 {isOverdue && <span className="text-red-400 font-semibold">{new Date(task.dueDate).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}</span>}
+            </div>
+            {/* Desktop Project Badge */}
+            <div className="hidden md:block">
+                {!selectedListId && projectList && <span className={`text-[10px] mt-1.5 inline-block w-fit px-1.5 py-0.5 rounded opacity-70 ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5 border border-white/10 truncate max-w-full`}>{projectList.name}</span>}
+            </div>
         </div>
 
+        {/* Mobile Footer: Assignee, Priority, Status */}
+        <div className="flex md:hidden items-center justify-between mt-2 pt-2 border-t border-white/5">
+             <div className="flex items-center gap-3">
+                {assignee ? <AvatarWithStatus user={assignee} className="w-6 h-6 ring-1 ring-white/10" /> : <div className="w-6 h-6 rounded-full border border-dashed border-white/20 flex items-center justify-center text-[10px]">?</div>}
+                <PriorityIcon priority={task.priority} />
+             </div>
+             <StatusDot status={task.status} onClick={handleStatusClick} editable={canEdit} />
+        </div>
+
+        {/* --- Desktop Columns --- */}
+
         {/* Assignee */}
-        <div className="hidden md:flex items-center">
-            {assignee ? <div className="flex items-center gap-2.5" title={assignee.name}><AvatarWithStatus user={assignee} className="w-6 h-6 ring-2 ring-surface" /><span className="text-xs text-text-secondary truncate max-w-[120px]">{assignee.name.split(' ')[0]}</span></div> : <div className="text-xs text-text-secondary/50 flex items-center gap-1.5"><div className="w-6 h-6 rounded-full border border-dashed border-white/20 flex items-center justify-center">?</div></div>}
+        <div className="hidden md:flex items-center min-w-0">
+            {assignee ? <div className="flex items-center gap-2.5 min-w-0" title={assignee.name}><AvatarWithStatus user={assignee} className="w-6 h-6 ring-2 ring-surface flex-shrink-0" /><span className="text-xs text-text-secondary truncate">{assignee.name.split(' ')[0]}</span></div> : <div className="text-xs text-text-secondary/50 flex items-center gap-1.5"><div className="w-6 h-6 rounded-full border border-dashed border-white/20 flex items-center justify-center">?</div></div>}
         </div>
 
         {/* Date */}
-        <div className="hidden md:flex items-center text-xs">
-             <div className={`flex items-center gap-2 ${isOverdue ? 'text-red-400 font-semibold' : 'text-text-secondary'}`}><span>{new Date(task.dueDate).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}</span></div>
+        <div className="hidden md:flex items-center text-xs min-w-0">
+             <div className={`flex items-center gap-2 truncate ${isOverdue ? 'text-red-400 font-semibold' : 'text-text-secondary'}`}><span>{new Date(task.dueDate).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}</span></div>
         </div>
 
         {/* Priority */}
-        <div className="hidden md:flex items-center justify-center">
+        <div className="hidden md:flex items-center justify-center min-w-0">
             <PriorityIcon priority={task.priority} />
         </div>
 
         {/* Status */}
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center min-w-0">
              <StatusDot status={task.status} onClick={handleStatusClick} editable={canEdit} />
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Actions (Desktop) - Always visible */}
+        <div className="hidden md:flex items-center justify-end gap-1">
              {canEdit && <button onClick={(e) => { e.stopPropagation(); setSelectedTaskId(task.id); }} className="p-1.5 text-text-secondary hover:text-primary hover:bg-white/10 rounded-md transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>}
              {canDelete && <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="p-1.5 text-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>}
         </div>

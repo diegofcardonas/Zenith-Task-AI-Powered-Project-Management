@@ -94,14 +94,14 @@ const BoardView: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-x-auto overflow-y-hidden w-full">
+    <div className="h-full overflow-x-auto overflow-y-hidden w-full snap-x snap-mandatory">
         {/* Container restricted to max-w for better visuals on ultra-wide screens */}
         <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-6 h-full min-w-full md:max-w-[1600px] md:mx-auto px-4 pb-4">
         {columns.map(({ status, tasks: columnTasks }) => (
             <div
             key={status}
             className={`
-                flex-shrink-0 w-[85vw] md:w-auto h-full
+                flex-shrink-0 w-[85vw] md:w-auto h-full snap-center
                 rounded-2xl flex flex-col transition-all duration-300 
                 bg-[#1e293b]/40 border border-white/5 backdrop-blur-sm
                 ${dragOverStatus === status ? 'bg-[#1e293b]/80 ring-2 ring-primary/30 scale-[1.01]' : 'hover:border-white/10'}

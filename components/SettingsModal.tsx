@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { themes, ThemeName, ColorScheme } from '../themes';
 import { useTranslation } from '../i18n';
 import { useAppContext } from '../contexts/AppContext';
 import AvatarWithStatus from './AvatarWithStatus';
+import { saveFirebaseConfig, resetFirebaseConfig } from '../src/firebase';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,7 +20,8 @@ enum SettingsTab {
   General = 'general',
   Appearance = 'appearance',
   Notifications = 'notifications',
-  Integrations = 'integrations'
+  Integrations = 'integrations',
+  Connection = 'connection' // New tab
 }
 
 const Switch: React.FC<{ checked: boolean; onChange: (checked: boolean) => void }> = ({ checked, onChange }) => (
@@ -50,7 +52,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
       marketing: false
   });
 
+  const [firebaseConfigJson, setFirebaseConfigJson] = useState('');
+
+  useEffect(() => {
+      const stored = localStorage.getItem('zenith_firebase_config');
+      if (stored) setFirebaseConfigJson(stored);
+  }, []);
+
   if (!isOpen) return null;
+
+  const handleSaveConnection = () => {
+      if (saveFirebaseConfig(firebaseConfigJson)) {
+          alert("Configuración guardada. La aplicación se recargará.");
+      } else {
+          alert("JSON inválido. Por favor verifica el formato.");
+      }
+  };
 
   const tabs = [
       { id: SettingsTab.Account, label: t('modals.account'), icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
@@ -58,6 +75,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
       { id: SettingsTab.Appearance, label: t('modals.appearance'), icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
       { id: SettingsTab.Notifications, label: t('modals.notifications'), icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> },
       { id: SettingsTab.Integrations, label: t('modals.integrations'), icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+      { id: SettingsTab.Connection, label: 'Conexión Cloud', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
   ];
 
   const filteredTabs = tabs.filter(tab => tab.label.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -94,7 +112,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
                 {filteredTabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => setActiveTab(tab.id as SettingsTab)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium ${activeTab === tab.id ? 'bg-primary text-white shadow-md shadow-primary/30' : 'text-text-secondary hover:bg-surface hover:text-text-primary'}`}
                     >
                         {tab.icon}
@@ -159,6 +177,53 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
                              </div>
                         </div>
                      </div>
+                )}
+
+                {/* Connection Settings */}
+                {activeTab === SettingsTab.Connection && (
+                    <div className="max-w-2xl mx-auto space-y-8 animate-fadeIn">
+                        <div>
+                            <h3 className="text-xl font-bold text-text-primary mb-1">Conexión Firebase</h3>
+                            <p className="text-text-secondary mb-6 text-sm">Configura tu propia base de datos para persistencia real.</p>
+                            
+                            <div className="space-y-4">
+                                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg text-sm text-blue-300">
+                                    <p className="font-bold mb-1">Instrucciones:</p>
+                                    <ol className="list-decimal list-inside space-y-1">
+                                        <li>Ve a tu consola de Firebase > Project Settings.</li>
+                                        <li>Copia el objeto <code>firebaseConfig</code>.</li>
+                                        <li>Pégalo abajo y guarda.</li>
+                                    </ol>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-text-secondary mb-2">Configuración JSON</label>
+                                    <textarea
+                                        value={firebaseConfigJson}
+                                        onChange={(e) => setFirebaseConfigJson(e.target.value)}
+                                        rows={10}
+                                        placeholder='{ "apiKey": "...", "authDomain": "..." }'
+                                        className="w-full p-3 bg-secondary rounded-xl border border-border focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-xs"
+                                    />
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button 
+                                        onClick={handleSaveConnection}
+                                        className="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors shadow-lg"
+                                    >
+                                        Guardar y Recargar
+                                    </button>
+                                    <button 
+                                        onClick={resetFirebaseConfig}
+                                        className="px-6 py-2 bg-secondary text-text-secondary font-semibold rounded-lg hover:text-white transition-colors"
+                                    >
+                                        Restaurar Default
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* General Settings */}
